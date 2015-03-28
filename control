@@ -1,0 +1,10 @@
+Package: com.theronen.libproceduralwallpaper
+Name: libProceduralWallpaper
+Depends: 
+Version: 0.0.1
+Architecture: iphoneos-arm
+Description: An awesome library of some sort!!
+Maintainer: Allan Kerr
+Author: Allan Kerr
+Section: System
+Tag: role::developer

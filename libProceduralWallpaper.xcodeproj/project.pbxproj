@@ -1,0 +1,112 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXFileReference section */
+		116037141AC68B140083E61B /* CARenderServerAPI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CARenderServerAPI.h; sourceTree = "<group>"; };
+		116037151AC68B140083E61B /* IOSurfaceAPI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IOSurfaceAPI.h; sourceTree = "<group>"; };
+		116037161AC68B140083E61B /* SBFProceduralWallpaper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SBFProceduralWallpaper.h; sourceTree = "<group>"; };
+		116037171AC68B140083E61B /* SBFProceduralWallpaperDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SBFProceduralWallpaperDelegate.h; sourceTree = "<group>"; };
+		116037181AC68B1C0083E61B /* PWView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PWView.h; sourceTree = "<group>"; };
+		116037191AC68B1C0083E61B /* PWView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PWView.m; sourceTree = "<group>"; };
+		1160371A1AC68B1C0083E61B /* PWWallpaper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PWWallpaper.h; sourceTree = "<group>"; };
+		1160371B1AC68B1C0083E61B /* PWWallpaper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PWWallpaper.m; sourceTree = "<group>"; };
+		1160371C1AC68B1C0083E61B /* PWWallpaperCache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PWWallpaperCache.h; sourceTree = "<group>"; };
+		1160371D1AC68B1C0083E61B /* PWWallpaperCache.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PWWallpaperCache.m; sourceTree = "<group>"; };
+		1160371E1AC68B1C0083E61B /* PWWallpaperFactory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PWWallpaperFactory.h; sourceTree = "<group>"; };
+		1160371F1AC68B230083E61B /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		116037201AC68B280083E61B /* control */ = {isa = PBXFileReference; lastKnownFileType = text; path = control; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		1160370B1AC68A830083E61B = {
+			isa = PBXGroup;
+			children = (
+				116037121AC68A870083E61B /* libProceduralWallpaper */,
+			);
+			sourceTree = "<group>";
+		};
+		116037121AC68A870083E61B /* libProceduralWallpaper */ = {
+			isa = PBXGroup;
+			children = (
+				116037131AC68B140083E61B /* include */,
+				116037201AC68B280083E61B /* control */,
+				1160371F1AC68B230083E61B /* Makefile */,
+				116037181AC68B1C0083E61B /* PWView.h */,
+				116037191AC68B1C0083E61B /* PWView.m */,
+				1160371A1AC68B1C0083E61B /* PWWallpaper.h */,
+				1160371B1AC68B1C0083E61B /* PWWallpaper.m */,
+				1160371C1AC68B1C0083E61B /* PWWallpaperCache.h */,
+				1160371D1AC68B1C0083E61B /* PWWallpaperCache.m */,
+				1160371E1AC68B1C0083E61B /* PWWallpaperFactory.h */,
+			);
+			name = libProceduralWallpaper;
+			sourceTree = "<group>";
+		};
+		116037131AC68B140083E61B /* include */ = {
+			isa = PBXGroup;
+			children = (
+				116037141AC68B140083E61B /* CARenderServerAPI.h */,
+				116037151AC68B140083E61B /* IOSurfaceAPI.h */,
+				116037161AC68B140083E61B /* SBFProceduralWallpaper.h */,
+				116037171AC68B140083E61B /* SBFProceduralWallpaperDelegate.h */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXProject section */
+		1160370C1AC68A830083E61B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0620;
+			};
+			buildConfigurationList = 1160370F1AC68A830083E61B /* Build configuration list for PBXProject "libProceduralWallpaper" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 1160370B1AC68A830083E61B;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+			);
+		};
+/* End PBXProject section */
+
+/* Begin XCBuildConfiguration section */
+		116037101AC68A830083E61B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		116037111AC68A830083E61B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1160370F1AC68A830083E61B /* Build configuration list for PBXProject "libProceduralWallpaper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				116037101AC68A830083E61B /* Debug */,
+				116037111AC68A830083E61B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 1160370C1AC68A830083E61B /* Project object */;
+}

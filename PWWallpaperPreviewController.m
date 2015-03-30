@@ -9,11 +9,14 @@
 #import "PWWallpaperPreviewController.h"
 #import "WallpaperMagicGridViewControllerSpec.h"
 #import "WallpaperMagicGridViewController.h"
+#import "PWWallpaper.h"
 
 NSString *const kSBUIMagicWallpaperIdentifierKey = @"kSBUIMagicWallpaperIdentifierKey";
 NSString *const kSBUIMagicWallpaperPresetOptionsKey = @"kSBUIMagicWallpaperPresetOptionsKey";
+NSString *const kSBUIMagicWallpaperThumbnailNameKey = @"kSBUIMagicWallpaperThumbnailNameKey";
 
 @interface PWWallpaperPreviewController ()
+@property (nonatomic) BOOL setButtonEnabled;
 @property (nonatomic) BOOL asyncWallpaperLoading;
 @property (nonatomic, assign) UIActivityIndicatorView *activityIndicator;
 @property (nonatomic, retain) WallpaperMagicGridViewController *gridViewController;
@@ -29,6 +32,23 @@ NSString *const kSBUIMagicWallpaperPresetOptionsKey = @"kSBUIMagicWallpaperPrese
     if (self.asyncWallpaperLoading) {
         [self initializeLoadingIndicator];
     }
+    self.cropOverlay.wallpaperBottomBar.doSetButton.enabled = self.setButtonEnabled;
+}
+
+- (PWWallpaper *)contentView
+{
+    // Returns the PWWallpaper subclass
+    return [[[self wallpaperPreviewViewController] _wallpaperView] contentView];
+}
+
+- (NSDictionary *)wallpaperForOptions:(NSDictionary *)options
+{
+    NSString *identifier = [options valueForKey:kSBUIMagicWallpaperIdentifierKey];
+    if (identifier == nil) {
+        // assertion for nil identifier
+    }
+    // Mutable options are needed for adding the thumbnail once its been created and updating the options in the case of asynchronous wallpaper loading
+    return @{kSBUIMagicWallpaperIdentifierKey : identifier, kSBUIMagicWallpaperPresetOptionsKey : [[options mutableCopy] autorelease]};
 }
 
 + (id)controllerWithWallpaperOptions:(NSDictionary *)options
@@ -42,12 +62,7 @@ NSString *const kSBUIMagicWallpaperPresetOptionsKey = @"kSBUIMagicWallpaperPrese
     if (!bundle.loaded) {
         [bundle load];
     }
-    NSString *identifier = [options valueForKey:kSBUIMagicWallpaperIdentifierKey];
-    if (identifier == nil) {
-        // assertion for nil identifier
-    }
-    // Mutable options are needed for adding the thumbnail once its been created and updating the options in the case of asynchronous wallpaper loading
-    NSDictionary *wallpaper = @{kSBUIMagicWallpaperIdentifierKey : identifier, kSBUIMagicWallpaperPresetOptionsKey : [[options mutableCopy] autorelease]};
+    NSDictionary *wallpaper = [self wallpaperForOptions:options];
     if (self = [super initWithMagicWallpaper:wallpaper options:nil]) {
         WallpaperMagicGridViewControllerSpec *spec;
         if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
@@ -67,6 +82,7 @@ NSString *const kSBUIMagicWallpaperPresetOptionsKey = @"kSBUIMagicWallpaperPrese
         [[[NSClassFromString(@"WallpaperPreviewNavigationController") alloc] initWithRootViewController:self] autorelease];
         
         self.asyncWallpaperLoading = NO;
+        self.setButtonEnabled = YES;
     }
     return self;
 }
@@ -78,26 +94,53 @@ NSString *const kSBUIMagicWallpaperPresetOptionsKey = @"kSBUIMagicWallpaperPrese
     self.activityIndicator.hidesWhenStopped = YES;
     [self.cropOverlay addSubview:self.activityIndicator];
     [self.activityIndicator startAnimating];
-    
-    self.cropOverlay.wallpaperBottomBar.doSetButton.enabled = NO;
+}
+
+- (void)stopLoadingIndicator
+{
+    NSLog(@"\n\n\n\n setButton:%i", self.setButtonEnabled);
+    self.cropOverlay.wallpaperBottomBar.doSetButton.enabled = self.setButtonEnabled;
+    [self.activityIndicator stopAnimating];
 }
 
 - (void)beginAsyncWallpaperLoading
 {
+    self.setButtonEnabled = NO;
     self.asyncWallpaperLoading = YES;
     if (self.cropOverlay) {
+        self.cropOverlay.wallpaperBottomBar.doSetButton.enabled = self.setButtonEnabled;
         [self initializeLoadingIndicator];
     }
 }
 
-- (void)endAsyncWallpaperLoadingWithOptions:(NSDictionary *)options success:(BOOL)success
+- (void)asyncWallpaperLoadingFailedWithTitle:(NSString *)title errorMessage:(NSString *)errorMessage
 {
-    self.asyncWallpaperLoading = YES;
+    self.asyncWallpaperLoading = NO;
     if (self.cropOverlay != nil) {
-        self.cropOverlay.wallpaperBottomBar.doSetButton.enabled = success;
-        [self.activityIndicator stopAnimating];
+        [self stopLoadingIndicator];
+    }
+    UIAlertView *alert = [[[UIAlertView alloc] initWithTitle:title message:errorMessage delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil] autorelease];
+    [alert show];
+}
+
+- (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex
+{
+    if (buttonIndex == 0) {
+        [self cropOverlayWasCancelled:self.cropOverlay];
     }
 }
+
+- (void)endAsyncWallpaperLoadingWithOptions:(NSDictionary *)options newWallpaper:(BOOL)newWallpaper
+{
+    self.setButtonEnabled = YES;
+    self.asyncWallpaperLoading = NO;
+    if (self.cropOverlay != nil) {
+        [self stopLoadingIndicator];
+    }
+    NSDictionary *wallpaper = [self wallpaperForOptions:options];
+    [self.gridViewController _setVariantBeingPreviewed:wallpaper];
+    [self.contentView updateWallpaperOptions:options newWallpaper:newWallpaper];
+}  
 
 - (void)cropOverlayWasCancelled:(PLCropOverlay *)overlay
 {

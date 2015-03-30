@@ -6,6 +6,8 @@
 //
 //
 
-@interface SBSUIWallpaperPreviewViewController : UIViewController
+#import "SBFWallpaperView.h"
 
+@interface SBSUIWallpaperPreviewViewController : UIViewController
+- (SBFWallpaperView *)_wallpaperView;
 @end

@@ -10,6 +10,6 @@
 
 @interface PWWallpaperCache : NSObject
 @property (nonatomic) int referenceCount;
-- (id)initWithIdentifier:(NSString *)identifier wallpaperFactory:(id <PWWallpaperFactory>)wallpaperFactory;
+- (id <PWWallpaperFactory>)addFactoryForIdentifier:(NSString *)identifier;
 - (PWView *)wallpaperForOptions:(NSDictionary *)options;
 @end

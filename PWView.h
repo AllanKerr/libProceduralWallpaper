@@ -6,8 +6,6 @@
 //
 //
 
-#import "SBFProceduralWallpaperDelegate.h"
-
 @interface CALayer (Pause)
 - (void)resume;
 - (void)pause;
@@ -16,7 +14,7 @@
 @interface PWView : UIView
 @property (nonatomic) BOOL isPaused;
 @property (nonatomic) int referenceCount;
-@property (nonatomic, assign) id <SBFProceduralWallpaperDelegate> delegate;
+- (void)updateWithOptions:(NSDictionary *)options;
 - (void)resume;  
 - (void)pause;
 @end

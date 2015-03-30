@@ -37,6 +37,9 @@
 		117005D91AC7D03D00020CF1 /* PLWallpaperImageViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PLWallpaperImageViewController.h; sourceTree = "<group>"; };
 		117005DA1AC7D06600020CF1 /* SBSUIWallpaperPreviewViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SBSUIWallpaperPreviewViewController.h; sourceTree = "<group>"; };
 		117005DB1AC7D11700020CF1 /* PUPhotosGridViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PUPhotosGridViewController.h; sourceTree = "<group>"; };
+		117005DD1AC8744400020CF1 /* SBFWallpaperView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SBFWallpaperView.h; sourceTree = "<group>"; };
+		1170081A1AC9248A00020CF1 /* PWWallpaperBlur.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PWWallpaperBlur.h; sourceTree = "<group>"; };
+		1170081B1AC9248A00020CF1 /* PWWallpaperBlur.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PWWallpaperBlur.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -58,6 +61,8 @@
 				116037191AC68B1C0083E61B /* PWView.m */,
 				1160371A1AC68B1C0083E61B /* PWWallpaper.h */,
 				1160371B1AC68B1C0083E61B /* PWWallpaper.m */,
+				1170081A1AC9248A00020CF1 /* PWWallpaperBlur.h */,
+				1170081B1AC9248A00020CF1 /* PWWallpaperBlur.m */,
 				1160371C1AC68B1C0083E61B /* PWWallpaperCache.h */,
 				1160371D1AC68B1C0083E61B /* PWWallpaperCache.m */,
 				1160371E1AC68B1C0083E61B /* PWWallpaperFactory.h */,
@@ -84,6 +89,7 @@
 				117005CD1AC7A3BE00020CF1 /* WallpaperMagicGridViewControllerSpec.h */,
 				117005CE1AC7A3BE00020CF1 /* WallpaperPreviewNavigationController.h */,
 				117005DA1AC7D06600020CF1 /* SBSUIWallpaperPreviewViewController.h */,
+				117005DD1AC8744400020CF1 /* SBFWallpaperView.h */,
 				116037161AC68B140083E61B /* SBFProceduralWallpaper.h */,
 				116037171AC68B140083E61B /* SBFProceduralWallpaperDelegate.h */,
 				116037141AC68B140083E61B /* CARenderServerAPI.h */,

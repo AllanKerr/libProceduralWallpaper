@@ -11,5 +11,11 @@
  
 @interface PWWallpaper : SBFProceduralWallpaper
 @property (nonatomic, assign) id <SBFProceduralWallpaperDelegate> delegate;
++ (int)blurFrameInterval;
++ (float)blurRadius;
++ (float)blurScale;
++ (float)saturationDeltaFactor;
++ (NSString *)factoryIdentifier;
+- (void)updateWallpaperOptions:(NSDictionary *)options newWallpaper:(BOOL)newWallpaper;
 @end
  

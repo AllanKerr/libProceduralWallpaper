@@ -28,45 +28,28 @@
 
 @end
 
-/*@interface PWView ()
-@property (nonatomic, retain) CADisplayLink *displayLink;
-@end*/
-
 @implementation PWView
 {
-    BOOL portrait;
     UIColor *_averageColor;
 }
 
-/*- (int)blurFrameInterval
+- (id)init
 {
-    return 5;
+    CGRect bounds = [UIScreen mainScreen].bounds;
+    return [self initWithFrame:bounds];
 }
-
-- (float)blurRadius
-{
-    return 5.0f;
-}
-
-- (float)blurScale
-{
-    return 0.25f;
-}
-
-- (float)saturationDeltaFactor
-{
-    return 1.8f;
-}*/
 
 - (id)initWithFrame:(CGRect)frame
 {
     if (self = [super initWithFrame:frame]) {
         self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleBottomMargin;
-        /*self.displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(updateBlurs:)];
-        self.displayLink.frameInterval = self.blurFrameInterval;
-        [self.displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];*/
     }
     return self;
+}
+
+- (void)updateWithOptions:(NSDictionary *)options
+{
+    
 }
 
 - (void)addSubview:(UIView *)subview
@@ -98,7 +81,6 @@
 - (void)dealloc
 {
     NSLog(@"\n\n\n\n\ndealloc PWView");
-    //[_displayLink invalidate];
     [_averageColor release];
     [super dealloc];
 }

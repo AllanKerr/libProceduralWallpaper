@@ -30,7 +30,7 @@
     return self;
 }
 
-- (void)updateBlurs:(CADisplayLink *)displayLink
+- (void)updateBlurs
 {
     void *surface = [self computeBlurs];
     [self.target.delegate wallpaper:self.target didGenerateBlur:surface forRect:self.target.frame];

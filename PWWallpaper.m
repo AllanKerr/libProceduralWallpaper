@@ -16,6 +16,7 @@ static PWWallpaperCache *_wallpaperCache = nil;
 @property (nonatomic, assign) PWView *activeView;
 @property (nonatomic, assign) PWWallpaperCache *wallpaperCache;
 @property (nonatomic, retain) PWWallpaperBlur *wallpaperBlur;
+@property (nonatomic, assign) NSTimer *orientationTimer;
 @property (nonatomic, retain) CADisplayLink *displayLink;
 @end
 
@@ -46,6 +47,11 @@ static PWWallpaperCache *_wallpaperCache = nil;
 + (float)saturationDeltaFactor
 {
     return 1.8f;
+}
+
++ (BOOL)dynamicBlur
+{
+    return YES;
 }
 
 + (NSString *)identifier
@@ -83,7 +89,9 @@ static PWWallpaperCache *_wallpaperCache = nil;
     } else {
         [self.activeView pause];
     }
-    self.displayLink.paused = !animating;
+    if ([self.class dynamicBlur]) {
+        self.displayLink.paused = !animating;
+    }
 }
 
 - (id)init
@@ -115,11 +123,33 @@ static PWWallpaperCache *_wallpaperCache = nil;
     
     // PWWallpaperBlur is an intermediate class to avoid the retain cycle imposed by CADisplayLink targeting self
     self.wallpaperBlur = [[[PWWallpaperBlur alloc] initWithTarget:self] autorelease];
-    self.displayLink = [CADisplayLink displayLinkWithTarget:self.wallpaperBlur selector:@selector(updateBlurs:)];
+    self.displayLink = [CADisplayLink displayLinkWithTarget:self.wallpaperBlur selector:@selector(updateBlurs)];
     self.displayLink.frameInterval = [self.class blurFrameInterval];
     [self.displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+    self.displayLink.paused = ![self.class dynamicBlur];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(willRemoveWallpaper:) name:@"PWWillRemoveWallpaper" object:nil];
+}
+
+- (void)layoutSubviews
+{
+    [super layoutSubviews];
+    if (![self.class dynamicBlur]) {
+        self.displayLink.paused = NO;
+        if (self.orientationTimer) {
+            [self.orientationTimer invalidate];
+        }
+        self.orientationTimer = [NSTimer scheduledTimerWithTimeInterval:0.4f target:self selector:@selector(orientationUpdated) userInfo:nil repeats:NO];
+    }
+}
+ 
+- (void)orientationUpdated
+{
+    self.displayLink.paused = YES;
+    [self.wallpaperBlur updateBlurs];
+    
+    [self.orientationTimer invalidate];
+    self.orientationTimer = nil;
 }
 
 // A notification is used to clear the active view to prevent access to a deallocated object
@@ -185,8 +215,10 @@ static PWWallpaperCache *_wallpaperCache = nil;
         _wallpaperCache = nil;
     }
     [[NSNotificationCenter defaultCenter] removeObserver:self];
-    [_displayLink invalidate];
-    [_displayLink release];
+    if (_displayLink != nil) {
+        [_displayLink invalidate];
+        [_displayLink release];
+    }
     [_wallpaperBlur release];
     [super dealloc];
     NSLog(@"\n\n\n\n\ndealloc PWWallpaper");

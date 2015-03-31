@@ -22,8 +22,10 @@
 
 - (void)pause
 {
-    self.timeOffset = [self convertTime:CACurrentMediaTime() fromLayer:nil];
+    CFTimeInterval pausedTime = [self convertTime:CACurrentMediaTime() fromLayer:nil];
     self.speed = 0.0f;
+    self.timeOffset = pausedTime;
+
 }
 
 @end
@@ -76,6 +78,17 @@
 - (void)pause
 {
     self.isPaused = YES;
+}
+
+- (void)layoutSubviews
+{
+    [super layoutSubviews];
+    [self layoutSublayers];
+}
+
+- (void)layoutSublayers
+{
+    
 }
 
 - (void)dealloc

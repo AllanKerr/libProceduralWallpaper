@@ -11,6 +11,7 @@
  
 @interface PWWallpaper : SBFProceduralWallpaper
 @property (nonatomic, assign) id <SBFProceduralWallpaperDelegate> delegate;
++ (BOOL)dynamicBlur;
 + (int)blurFrameInterval;
 + (float)blurRadius;
 + (float)blurScale;

@@ -10,6 +10,6 @@
 
 @interface PWWallpaperBlur : NSObject
 - (id)initWithTarget:(PWWallpaper *)target;
-- (void)updateBlurs:(CADisplayLink *)displayLink;
 - (void *)computeBlurs;
+- (void)updateBlurs;
 @end

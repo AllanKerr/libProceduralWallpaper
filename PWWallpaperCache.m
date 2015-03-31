@@ -23,7 +23,6 @@
 
 @interface PWWallpaperCache ()
 @property (nonatomic, retain) NSMutableDictionary *wallpapers;
-
 @property (nonatomic, retain) NSMutableArray *wallpaperFactoryCache;
 @property (nonatomic, retain) NSMutableDictionary *wallpaperFactories;
 @end
@@ -71,24 +70,18 @@
         oldOptions = [oldOptions dictionaryByRemovingThumbailKey];
         oldView = [self.wallpapers objectForKey:oldOptions];
         oldView.referenceCount--;
-        
-        NSLog(@"\n\n\n\n WILL DEREF OLD VIEW");
     }
     NSDictionary *newOptions = [change valueForKey:@"new"];
     if (![newOptions isEqual:[NSNull null]] && [newOptions valueForKey:kSBUIMagicWallpaperIdentifierKey]) {
         newOptions = [newOptions dictionaryByRemovingThumbailKey];
         PWView *newView = [self initializeWallpaperWithOptions:newOptions];
         newView.referenceCount++;
-        
-        NSLog(@"\n\n\n\n WILL CREATE NEW VIEW");
     }
     if (oldView != nil && oldView.referenceCount <= 0) {
         [[NSNotificationCenter defaultCenter] postNotificationName:@"PWWillRemoveWallpaper" object:oldView];
         [oldView removeFromSuperview];
         [self.wallpapers removeObjectForKey:oldOptions];
         
-        NSLog(@"\n\n\n\n WILL DEALLOC OLD VIEW");
-
         NSString *identifier = [oldOptions valueForKey:kSBUIMagicWallpaperIdentifierKey];
         id <PWWallpaperFactory> wallpaperFactory = [self.wallpaperFactories valueForKey:identifier];
         

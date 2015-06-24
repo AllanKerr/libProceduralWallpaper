@@ -104,7 +104,7 @@
 		1160370C1AC68A830083E61B /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0620;
+				LastUpgradeCheck = 0630;
 			};
 			buildConfigurationList = 1160370F1AC68A830083E61B /* Build configuration list for PBXProject "libProceduralWallpaper" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -125,6 +125,7 @@
 		116037101AC68A830083E61B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ONLY_ACTIVE_ARCH = YES;
 			};
 			name = Debug;
 		};

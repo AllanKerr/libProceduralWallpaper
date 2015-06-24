@@ -66,10 +66,10 @@ static PWWallpaperCache *_wallpaperCache = nil;
 
 // PWWallpaperCache is shared between all instances of PWWallpaper
 // This is done because iOS 8 handles procedural wallpapers with a single PWWallpaper for both lock and home screen that handles two views
-// NOTE:    This is assumed be to be an optimization in iOS 8 due to the default procedural wallpapers the same design
+// NOTE:    This is assumed be to be an optimization in iOS 8 due to the default procedural wallpapers sharing the same design
 //          All that differs is background color which can be changed dynamically without the overhead of multiple views
 // In iOS 7 two PWWallpapers are created each with their own UIView
-// In order to handle these two patterns PWWallpaperCache is shared between all PWWallpapers
+// In order to handle these two design patterns PWWallpaperCache is shared between all PWWallpapers
 // The referenceCount must manually be tracked due to any one wallpaper lacking explicit ownership
 
 - (PWWallpaperCache *)wallpaperCache
@@ -131,29 +131,40 @@ static PWWallpaperCache *_wallpaperCache = nil;
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(willRemoveWallpaper:) name:@"PWWillRemoveWallpaper" object:nil];
 }
 
-- (void)layoutSubviews
+- (void)setFrame:(CGRect)frame
 {
-    [super layoutSubviews];
+    [super setFrame:frame];
     if (![self.class dynamicBlur]) {
         self.displayLink.paused = NO;
         if (self.orientationTimer) {
             [self.orientationTimer invalidate];
+        } else {
+            NSLog(@"\n\n\n\n\n START");
         }
-        self.orientationTimer = [NSTimer scheduledTimerWithTimeInterval:0.4f target:self selector:@selector(orientationUpdated) userInfo:nil repeats:NO];
+        CGFloat duration = 2.0f * [[UIApplication sharedApplication] statusBarOrientationAnimationDuration];
+        self.orientationTimer = [NSTimer scheduledTimerWithTimeInterval:duration target:self selector:@selector(orientationUpdated) userInfo:nil repeats:NO];
     }
 }
- 
+
+- (void)resizeSubviewsWithOldSize:(CGSize)size
+{
+    [super resizeSubviewsWithOldSize:size];
+    NSLog(@"\n\n\n\n RESIZE");
+}
+
 - (void)orientationUpdated
 {
     self.displayLink.paused = YES;
     [self.wallpaperBlur updateBlurs];
-    
+    NSLog(@"\n\n\n\n\n STOP");
+
     [self.orientationTimer invalidate];
     self.orientationTimer = nil;
 }
 
 // A notification is used to clear the active view to prevent access to a deallocated object
 // Delegation can't be used because there are an indeterminate number of PWWallpapers per PWWallpaperCache
+
 - (void)willRemoveWallpaper:(NSNotification *)notification
 {
     if (self.activeView == notification.object) {
@@ -181,7 +192,7 @@ static PWWallpaperCache *_wallpaperCache = nil;
 }
 
 - (void)setWallpaperOptions:(NSDictionary *)options
-{
+{    
     PWView *view = [self.wallpaperCache wallpaperForOptions:options];
     if (view && view != self.activeView) {
         [self.activeView setHidden:YES];

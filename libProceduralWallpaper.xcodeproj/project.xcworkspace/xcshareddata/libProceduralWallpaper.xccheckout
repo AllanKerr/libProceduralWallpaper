@@ -11,7 +11,7 @@
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
 		<key>5207746B67F625B711E439DA5829F0E4FF4F2F2A</key>
-		<string>http://github.com/AllanKerr/libProceduralWallpaper</string>
+		<string>https://github.com/AllanKerr/libProceduralWallpaper</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
 	<string>libProceduralWallpaper.xcodeproj</string>
@@ -21,7 +21,7 @@
 		<string>../..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
-	<string>http://github.com/AllanKerr/libProceduralWallpaper</string>
+	<string>https://github.com/AllanKerr/libProceduralWallpaper</string>
 	<key>IDESourceControlProjectVersion</key>
 	<integer>111</integer>
 	<key>IDESourceControlProjectWCCIdentifier</key>

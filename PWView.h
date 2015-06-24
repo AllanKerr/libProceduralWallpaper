@@ -6,11 +6,6 @@
 //
 //
 
-@interface CALayer (Pause)
-- (void)resume;
-- (void)pause;
-@end
-
 @interface PWView : UIView
 @property (nonatomic) BOOL isPaused;
 @property (nonatomic) int referenceCount;

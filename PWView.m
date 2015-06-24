@@ -10,22 +10,31 @@
 
 @implementation CALayer (Pause)
 
+// CALayers and UIViews can only be paused in this manner if they don't support auto-resizing
+// Lone CALayers can be paused because auto-resizing is handled at the UIView level
+// UIViews set to UIViewAutoresizingNone can also be paused
+// Note: If a layer that supports auto-resizing is paused in this manner it will lock all interface elements in SpringBoard
+
 - (void)resume
 {
-    CFTimeInterval pausedTime = [self timeOffset];
-    self.speed = 1.0f;
-    self.timeOffset = 0.0f;  
-    self.beginTime = 0.0f;
-    CFTimeInterval timeSincePause = [self convertTime:CACurrentMediaTime() fromLayer:nil] - pausedTime;
-    self.beginTime = timeSincePause;
+    if (self.speed == 0.0f) {
+        CFTimeInterval pausedTime = [self timeOffset];
+        self.speed = 1.0f;
+        self.timeOffset = 0.0f;
+        self.beginTime = 0.0f;
+        CFTimeInterval timeSincePause = [self convertTime:CACurrentMediaTime() fromLayer:nil] - pausedTime;
+        self.beginTime = timeSincePause;
+    }
 }
 
 - (void)pause
 {
-    CFTimeInterval pausedTime = [self convertTime:CACurrentMediaTime() fromLayer:nil];
-    self.speed = 0.0f;
-    self.timeOffset = pausedTime;
-
+    UIView *view = self.delegate;
+    if (view == nil || ([view isKindOfClass:[UIView class]] && view.autoresizingMask == UIViewAutoresizingNone)) {
+        CFTimeInterval pausedTime = [self convertTime:CACurrentMediaTime() fromLayer:nil];
+        self.speed = 0.0f;
+        self.timeOffset = pausedTime;
+    }
 }
 
 @end
@@ -54,12 +63,6 @@
     
 }
 
-- (void)addSubview:(UIView *)subview
-{
-    subview.autoresizingMask = self.autoresizingMask;
-    [super addSubview:subview];
-}
-
 - (NSString *)description
 {
     return [NSString stringWithFormat:@"<%@: %p; isPaused:%i>", [self class], self, self.isPaused];
@@ -70,25 +73,27 @@
     return [UIColor blackColor];
 }
 
+// Pausing and resuming of UIViews that support auto-resizing must be done by overriding -resume and -pause
+// It is important to call [super resume] and [super pause] when they are overridden
+
 - (void)resume
 {
-    self.isPaused = NO;
+    if (self.isPaused) {
+        for (CALayer *layer in self.layer.sublayers) {
+            [layer resume];
+        }
+        self.isPaused = NO;
+    }
 }
 
 - (void)pause
 {
-    self.isPaused = YES;
-}
-
-- (void)layoutSubviews
-{
-    [super layoutSubviews];
-    [self layoutSublayers];
-}
-
-- (void)layoutSublayers
-{
-    
+    if (!self.isPaused) {
+        for (CALayer *layer in self.layer.sublayers) {
+            [layer pause];
+        }
+        self.isPaused = YES;
+    }
 }
 
 - (void)dealloc

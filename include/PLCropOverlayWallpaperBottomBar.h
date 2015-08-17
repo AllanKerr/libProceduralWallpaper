@@ -8,6 +8,11 @@
 
 #import "PLWallpaperButton.h"
 
-@interface PLCropOverlayWallpaperBottomBar : UIView 
+@interface PLCropOverlayWallpaperBottomBar : UIView
+- (void)setMotionToggleHidden:(BOOL)hidden;
 - (PLWallpaperButton *)doSetButton;
+- (PLWallpaperButton *)doSetBothScreenButton;
+- (PLWallpaperButton *)doSetLockScreenButton;
+- (PLWallpaperButton *)doSetHomeScreenButton;
+- (PLWallpaperButton *)motionToggle;
 @end

@@ -7,31 +7,33 @@
 //
 
 #import "PWWallpaper.h"
-#import "PWWallpaperBlur.h"
-#import "PWWallpaperCache.h"
+#import "PWView.h"
+#import "IOSurfaceAPI.h"
+#import "CARenderServerAPI.h"
+#import <Accelerate/Accelerate.h>
 
-static PWWallpaperCache *_wallpaperCache = nil;
+NSString *const kSBUIMagicWallpaperIdentifierKey = @"kSBUIMagicWallpaperIdentifierKey";
+NSString *const kSBUIMagicWallpaperPresetOptionsKey = @"kSBUIMagicWallpaperPresetOptionsKey";
+NSString *const kSBUIMagicWallpaperThumbnailNameKey = @"kSBUIMagicWallpaperThumbnailNameKey";
+NSString *const kSBProceduralWallpaperHomeOptionsKey = @"kSBProceduralWallpaperHomeOptionsKey";
+NSString *const kSBProceduralWallpaperLockOptionsKey = @"kSBProceduralWallpaperLockOptionsKey";
+
+@interface UIWindow (Context)
+- (uint32_t)_contextId;
+@end
 
 @interface PWWallpaper ()
-@property (nonatomic, assign) PWView *activeView;
-@property (nonatomic, assign) PWWallpaperCache *wallpaperCache;
-@property (nonatomic, retain) PWWallpaperBlur *wallpaperBlur;
-@property (nonatomic, assign) NSTimer *orientationTimer;
-@property (nonatomic, retain) CADisplayLink *displayLink;
+@property (readwrite, nonatomic, assign) PWView *activeView;
+@property (nonatomic, retain) NSMutableDictionary *wallpapers;
+@property (nonatomic, retain) NSUserDefaults *userDefaults;
 @end
 
 @implementation PWWallpaper
 @synthesize delegate = _delegate;
-@dynamic wallpaperCache;
 
-+ (BOOL)colorChangesSignificantly
++ (NSString *)identifier
 {
-    return NO;
-}
-
-+ (int)blurFrameInterval
-{
-    return 5;
+    return NSStringFromClass(self);
 }
 
 + (float)blurRadius
@@ -49,39 +51,11 @@ static PWWallpaperCache *_wallpaperCache = nil;
     return 1.8f;
 }
 
-+ (BOOL)dynamicBlur
++ (BOOL)colorChangesSignificantly
 {
-    return YES;
+    return NO;
 }
-
-+ (NSString *)identifier
-{
-    return NSStringFromClass(self);
-}
-
-+ (NSString *)factoryIdentifier
-{
-    return [NSString stringWithFormat:@"%@Factory", self];
-}
-
-// PWWallpaperCache is shared between all instances of PWWallpaper
-// This is done because iOS 8 handles procedural wallpapers with a single PWWallpaper for both lock and home screen that handles two views
-// NOTE:    This is assumed be to be an optimization in iOS 8 due to the default procedural wallpapers sharing the same design
-//          All that differs is background color which can be changed dynamically without the overhead of multiple views
-// In iOS 7 two PWWallpapers are created each with their own UIView
-// In order to handle these two design patterns PWWallpaperCache is shared between all PWWallpapers
-// The referenceCount must manually be tracked due to any one wallpaper lacking explicit ownership
-
-- (PWWallpaperCache *)wallpaperCache
-{
-    return _wallpaperCache;
-}
-
-- (void)setWallpaperCache:(PWWallpaperCache *)wallpaperCache
-{
-    _wallpaperCache = wallpaperCache;
-}
-
+ 
 - (void)setAnimating:(BOOL)animating
 {
     if (animating) {
@@ -89,111 +63,58 @@ static PWWallpaperCache *_wallpaperCache = nil;
     } else {
         [self.activeView pause];
     }
-    if ([self.class dynamicBlur]) {
-        self.displayLink.paused = !animating;
-    }
 }
 
-- (id)init
+- (void)layoutSubviews
 {
-    if (self = [super init]) {
-        [self _initialize];
+    NSArray *views = [self.wallpapers allValues];
+    for (PWView *view in views) {
+        [view viewWillTransitionToSize:self.frame.size];
     }
-    return self;
+    [super layoutSubviews];
 }
 
 - (id)initWithFrame:(CGRect)frame
 {
     if (self = [super initWithFrame:frame]) {
-        [self _initialize];
+        NSLog(@"\n\n\n\n\n_initialize PWWallpaper:%@", [self class]);
+        self.wallpapers = [NSMutableDictionary dictionaryWithCapacity:2];
+        self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+        
+        self.userDefaults = [NSUserDefaults standardUserDefaults];
+        int observerOptions = NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld;
+        [self.userDefaults addObserver:self forKeyPath:kSBProceduralWallpaperHomeOptionsKey options:observerOptions context:NULL];
+        [self.userDefaults addObserver:self forKeyPath:kSBProceduralWallpaperLockOptionsKey options:observerOptions context:NULL];
     }
     return self;
 }
 
-- (void)_initialize
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-    NSLog(@"\n\n\n\n\n_initialize PWWallpaper:%@", [self class]);
-    if (self.wallpaperCache == nil) {
-        self.wallpaperCache = [[[PWWallpaperCache alloc] init] autorelease];
+    PWView *oldView = nil;
+    NSDictionary *oldOptions = [change valueForKey:@"old"];
+    if (![oldOptions isEqual:[NSNull null]] && [oldOptions valueForKey:kSBUIMagicWallpaperIdentifierKey]) {
+        oldView = [self.wallpapers objectForKey:oldOptions];
+        oldView.referenceCount--;
     }
-    [self.wallpaperCache retain];
-    
-    self.wallpaperCache.referenceCount++;
-    self.autoresizesSubviews = YES;
-    
-    // PWWallpaperBlur is an intermediate class to avoid the retain cycle imposed by CADisplayLink targeting self
-    self.wallpaperBlur = [[[PWWallpaperBlur alloc] initWithTarget:self] autorelease];
-    self.displayLink = [CADisplayLink displayLinkWithTarget:self.wallpaperBlur selector:@selector(updateBlurs)];
-    self.displayLink.frameInterval = [self.class blurFrameInterval];
-    [self.displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
-    self.displayLink.paused = ![self.class dynamicBlur];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(willRemoveWallpaper:) name:@"PWWillRemoveWallpaper" object:nil];
-}
-
-- (void)setFrame:(CGRect)frame
-{
-    [super setFrame:frame];
-    if (![self.class dynamicBlur]) {
-        self.displayLink.paused = NO;
-        if (self.orientationTimer) {
-            [self.orientationTimer invalidate];
-        } else {
-            NSLog(@"\n\n\n\n\n START");
+    NSDictionary *newOptions = [change valueForKey:@"new"];
+    if (![newOptions isEqual:[NSNull null]] && [newOptions valueForKey:kSBUIMagicWallpaperIdentifierKey]) {
+        PWView *newView = [self wallpaperForOptions:newOptions];
+        newView.referenceCount++;
+    }
+    if (oldView != nil && oldView.referenceCount <= 0) {
+        if (self.activeView == oldView) {
+            self.activeView = nil;
         }
-        CGFloat duration = 2.0f * [[UIApplication sharedApplication] statusBarOrientationAnimationDuration];
-        self.orientationTimer = [NSTimer scheduledTimerWithTimeInterval:duration target:self selector:@selector(orientationUpdated) userInfo:nil repeats:NO];
+        [oldView removeFromSuperview];
+        [self.wallpapers removeObjectForKey:oldOptions];
+        [self clearUnusedAssets];
     }
-}
-
-- (void)resizeSubviewsWithOldSize:(CGSize)size
-{
-    [super resizeSubviewsWithOldSize:size];
-    NSLog(@"\n\n\n\n RESIZE");
-}
-
-- (void)orientationUpdated
-{
-    self.displayLink.paused = YES;
-    [self.wallpaperBlur updateBlurs];
-    NSLog(@"\n\n\n\n\n STOP");
-
-    [self.orientationTimer invalidate];
-    self.orientationTimer = nil;
-}
-
-// A notification is used to clear the active view to prevent access to a deallocated object
-// Delegation can't be used because there are an indeterminate number of PWWallpapers per PWWallpaperCache
-
-- (void)willRemoveWallpaper:(NSNotification *)notification
-{
-    if (self.activeView == notification.object) {
-        self.activeView = nil;
-    }
-}
-
-- (NSData *)generateThumbnail
-{
-    CGSize size = self.bounds.size;
-    size.width *= 0.5f;
-    size.height *= 0.5f;
-    
-    UIGraphicsBeginImageContext(size);
-    [self drawViewHierarchyInRect:(CGRect){CGPointZero, size} afterScreenUpdates:NO];
-    UIImage *thumbnail = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-    
-    return UIImagePNGRepresentation(thumbnail);
-}
-
-- (void *)copyBlurForRect:(CGRect *)rect
-{
-    return [self.wallpaperBlur computeBlurs];
 }
 
 - (void)setWallpaperOptions:(NSDictionary *)options
-{    
-    PWView *view = [self.wallpaperCache wallpaperForOptions:options];
+{
+    PWView *view = [self wallpaperForOptions:options];
     if (view && view != self.activeView) {
         [self.activeView setHidden:YES];
         [self.activeView pause];
@@ -203,36 +124,189 @@ static PWWallpaperCache *_wallpaperCache = nil;
     [self addSubview:view];
 }
 
-- (void)updateWallpaperOptions:(NSDictionary *)options newWallpaper:(BOOL)newWallpaper
+- (PWView *)wallpaperForOptions:(NSDictionary *)options
 {
-    if (newWallpaper) {
-        
-    } else {
-        [self.activeView updateWithOptions:options];
+    PWView *view = nil;
+    if (options != nil) {
+        view = [self.wallpapers objectForKey:options];
+        if (view == nil) {
+            view = [self initializeWallpaperWithOptions:options];
+            view.delegate = self;
+            [self.wallpapers setObject:view forKey:options];
+        }
     }
+    NSLog(@"\n\n\n\nwallpapers:%@", self.wallpapers);
+    return view;
+}
+
+- (PWView *)initializeWallpaperWithOptions:(NSDictionary *)options
+{
+    [self doesNotRecognizeSelector:_cmd];
+    return nil;
+}
+
+// called whenever a wallpaper created from this factory is deallocated
+// allows for storing assets in the wallpaper factory and sharing them between wallpapers
+- (void)clearUnusedAssets
+{
+    
+}
+
+- (void *)surfaceForRect:(CGRect)rect
+{
+    NSNumber *isGlobal = [NSNumber numberWithBool:YES];
+    NSNumber *pixelFormat = [NSNumber numberWithUnsignedInt:'BGRA'];
+    NSNumber *width =  [NSNumber numberWithInt:CGRectGetWidth(rect)];
+    NSNumber *height =  [NSNumber numberWithInt:CGRectGetHeight(rect)];
+    NSNumber *bytesPerElement =  [NSNumber numberWithInt:4];
+    
+    CFDictionaryRef properties = (__bridge CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:isGlobal, kIOSurfaceIsGlobal,bytesPerElement, kIOSurfaceBytesPerElement, width, kIOSurfaceWidth, height, kIOSurfaceHeight, pixelFormat, kIOSurfacePixelFormat, nil];
+    return IOSurfaceCreate(properties);
+}
+
+- (void)updateBlurForView:(PWView *)view
+{
+    if (self.activeView == view) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            void *blurSurface = [self computeBlurs];
+            [self.delegate wallpaper:self didGenerateBlur:blurSurface forRect:self.bounds];
+        });
+    }
+}
+
+- (UIColor *)computeAverageColor
+{
+    CGSize size = self.bounds.size;
+    CGRect frame = CGRectMake(0.0f, 0.0f, 1.0f, 1.0f);
+    CATransform3D transform = CATransform3DMakeScale(CGRectGetWidth(frame)/size.width, CGRectGetHeight(frame)/size.height, 1.0f);
+    
+    void *surface = [self surfaceForRect:frame];
+    IOSurfaceLock(surface, 0, NULL);
+    CARenderServerRenderLayerWithTransform(MACH_PORT_NULL, [self.window _contextId], (uint64_t)self.layer, surface, 0, 0, &transform);
+    IOSurfaceUnlock(surface, 0, NULL);
+    
+    Byte *data = (Byte *)IOSurfaceGetBaseAddress(surface);
+    CGFloat blue = data[0] / 255.0f;
+    CGFloat green = data[1] / 255.0f;
+    CGFloat red = data[2] / 255.0f;
+        
+    return [UIColor colorWithRed:red green:green blue:blue alpha:1.0f];
+}
+
+
+- (void *)computeBlurs
+{
+    CGSize size = self.bounds.size;
+    CGRect frame = CGRectMake(0.0f, 0.0f, size.width * [self.class blurScale], size.height * [self.class blurScale]);
+    CATransform3D transform = CATransform3DMakeScale(CGRectGetWidth(frame)/size.width, CGRectGetHeight(frame)/size.height, 1.0f);
+    
+    void *surface = [self surfaceForRect:frame];
+    IOSurfaceLock(surface, 0, NULL);
+    CARenderServerRenderLayerWithTransform(MACH_PORT_NULL, [self.window _contextId], (uint64_t)self.layer, surface, 0, 0, &transform);
+    
+ 
+
+    vImage_Buffer effectInBuffer;
+    vImage_Buffer scratchBuffer1;
+    
+    vImage_Buffer *inputBuffer;
+    vImage_Buffer *outputBuffer;
+    
+    vImage_CGImageFormat format = {
+        .bitsPerComponent = 8,
+        .bitsPerPixel = 32,
+        .colorSpace = NULL,
+        // (kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little)
+        // requests a BGRA buffer.
+        .bitmapInfo = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little,
+        .version = 0,
+        .decode = NULL,
+        .renderingIntent = kCGRenderingIntentDefault
+    };
+    vImageBuffer_Init(&effectInBuffer, IOSurfaceGetHeight(surface), IOSurfaceGetWidth(surface), format.bitsPerPixel, kvImageNoAllocate);
+    effectInBuffer.data = IOSurfaceGetBaseAddress(surface);
+    
+    vImageBuffer_Init(&scratchBuffer1, effectInBuffer.height, effectInBuffer.width, format.bitsPerPixel, kvImageNoFlags);
+    inputBuffer = &effectInBuffer;
+    outputBuffer = &scratchBuffer1;
+    
+    // A description of how to compute the box kernel width from the Gaussian
+    // radius (aka standard deviation) appears in the SVG spec:
+    // http://www.w3.org/TR/SVG/filters.html#feGaussianBlurElement
+    //
+    // For larger values of 's' (s >= 2.0), an approximation can be used: Three
+    // successive box-blurs build a piece-wise quadratic convolution kernel, which
+    // approximates the Gaussian kernel to within roughly 3%.
+    //
+    // let d = floor(s * 3*sqrt(2*pi)/4 + 0.5)
+    //
+    // ... if d is odd, use three box-blurs of size 'd', centered on the output pixel.
+    //
+    CGFloat inputRadius = [self.class blurRadius] * [UIScreen mainScreen].scale;
+    if (inputRadius - 2. < __FLT_EPSILON__)
+        inputRadius = 2.;
+    uint32_t radius = floor((inputRadius * 3. * sqrt(2 * M_PI) / 4 + 0.5) / 2);
+    
+    radius |= 1; // force radius to be odd so that the three box-blur methodology works.
+    
+    NSInteger tempBufferSize = vImageBoxConvolve_ARGB8888(inputBuffer, outputBuffer, NULL, 0, 0, radius, radius, NULL, kvImageGetTempBufferSize | kvImageEdgeExtend);
+    void *tempBuffer = malloc(tempBufferSize);
+    
+    vImageBoxConvolve_ARGB8888(inputBuffer, outputBuffer, tempBuffer, 0, 0, radius, radius, NULL, kvImageEdgeExtend);
+    vImageBoxConvolve_ARGB8888(outputBuffer, inputBuffer, tempBuffer, 0, 0, radius, radius, NULL, kvImageEdgeExtend);
+    vImageBoxConvolve_ARGB8888(inputBuffer, outputBuffer, tempBuffer, 0, 0, radius, radius, NULL, kvImageEdgeExtend);
+    
+    free(tempBuffer);
+    
+    vImage_Buffer *temp = inputBuffer;
+    inputBuffer = outputBuffer;
+    outputBuffer = temp;
+    
+    CGFloat s = [self.class saturationDeltaFactor];
+    // These values appear in the W3C Filter Effects spec:
+    // https://dvcs.w3.org/hg/FXTF/raw-file/default/filters/index.html#grayscaleEquivalent
+    //
+    CGFloat floatingPointSaturationMatrix[] = {
+        0.0722 + 0.9278 * s,  0.0722 - 0.0722 * s,  0.0722 - 0.0722 * s,  0,
+        0.7152 - 0.7152 * s,  0.7152 + 0.2848 * s,  0.7152 - 0.7152 * s,  0,
+        0.2126 - 0.2126 * s,  0.2126 - 0.2126 * s,  0.2126 + 0.7873 * s,  0,
+        0,                    0,                    0,                    1,
+    };
+    const int32_t divisor = 256;
+    NSUInteger matrixSize = sizeof(floatingPointSaturationMatrix)/sizeof(floatingPointSaturationMatrix[0]);
+    int16_t saturationMatrix[matrixSize];
+    for (NSUInteger i = 0; i < matrixSize; ++i) {
+        saturationMatrix[i] = (int16_t)roundf(floatingPointSaturationMatrix[i] * divisor);
+    }
+    vImageMatrixMultiply_ARGB8888(inputBuffer, outputBuffer, saturationMatrix, divisor, NULL, NULL, kvImageNoFlags);
+    
+    uint32_t *f = (uint32_t *)outputBuffer->data;
+    uint32_t *r = (uint32_t *)IOSurfaceGetBaseAddress(surface);
+    memcpy(r, f, IOSurfaceGetAllocSize(surface));
+    free(inputBuffer->data);
+    
+    IOSurfaceUnlock(surface, 0, NULL);
+    return surface;
+}
+
+- (void *)copyBlurForRect:(CGRect *)rect
+{
+    return [self computeBlurs];
 }
 
 - (UIColor *)averageLifetimeColor
 {
-    return [UIColor blackColor];//[self.activeView averageColor];
+    return [self computeAverageColor];
 }
 
 - (void)dealloc
 {
-    _wallpaperCache.referenceCount--;
-    BOOL dereferenced = _wallpaperCache.referenceCount <= 0;
-    [_wallpaperCache release];
-    if (dereferenced) {
-        _wallpaperCache = nil;
-    }
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-    if (_displayLink != nil) {
-        [_displayLink invalidate];
-        [_displayLink release];
-    }
-    [_wallpaperBlur release];
-    [super dealloc];
     NSLog(@"\n\n\n\n\ndealloc PWWallpaper");
+    [_userDefaults removeObserver:self forKeyPath:@"kSBProceduralWallpaperHomeOptionsKey"];
+    [_userDefaults removeObserver:self forKeyPath:@"kSBProceduralWallpaperLockOptionsKey"];
+    [_userDefaults release];
+    [_wallpapers release];
+    [super dealloc];
 }
 
 @end

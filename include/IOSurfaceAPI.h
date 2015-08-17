@@ -21,6 +21,8 @@ extern size_t IOSurfaceGetBytesPerRow(void *buffer);
 extern size_t IOSurfaceGetAllocSize(void *buffer);
 extern size_t IOSurfaceGetWidth(void *buffer);
 extern size_t IOSurfaceGetHeight(void *buffer);
+extern int32_t IOSurfaceGetUseCount(void *buffer);
+extern Boolean IOSurfaceIsInUse(void *buffer);
 
 extern const CFStringRef kIOSurfaceAllocSize;
 extern const CFStringRef kIOSurfaceBytesPerRow;

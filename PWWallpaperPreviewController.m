@@ -9,15 +9,19 @@
 #import "PWWallpaperPreviewController.h"
 #import "WallpaperMagicGridViewControllerSpec.h"
 #import "WallpaperMagicGridViewController.h"
+#import "PLWallpaperButton.h"
 #import "PWWallpaper.h"
 
-NSString *const kSBUIMagicWallpaperIdentifierKey = @"kSBUIMagicWallpaperIdentifierKey";
-NSString *const kSBUIMagicWallpaperPresetOptionsKey = @"kSBUIMagicWallpaperPresetOptionsKey";
-NSString *const kSBUIMagicWallpaperThumbnailNameKey = @"kSBUIMagicWallpaperThumbnailNameKey";
+#import "PWWallpaperPreviewView.h"
+#import "PWToggleButton.h"
 
 @interface PWWallpaperPreviewController ()
-@property (nonatomic) BOOL setButtonEnabled;
 @property (nonatomic) BOOL asyncWallpaperLoading;
+@property (nonatomic) BOOL toggleEnabled;
+@property (nonatomic) int toggleIndex;
+@property (nonatomic, copy) NSString *toggleName;
+@property (nonatomic, copy) NSArray *toggleValues;
+@property (nonatomic, retain) NSMutableDictionary *options;
 @property (nonatomic, assign) UIActivityIndicatorView *activityIndicator;
 @property (nonatomic, retain) WallpaperMagicGridViewController *gridViewController;
 @end
@@ -27,43 +31,55 @@ NSString *const kSBUIMagicWallpaperThumbnailNameKey = @"kSBUIMagicWallpaperThumb
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    // CropOverlay is nil until viewDidLoad is called
-    // Allows for -beginAsyncWallpaperLoading to be called before presenting PWWallpaperPreviewController
-    if (self.asyncWallpaperLoading) {
+    // PLCropOverlay is not initialized until after -viewLoad
+    if (self.toggleEnabled == YES) {
+        [self initializeToggle];
+    }
+    if (self.asyncWallpaperLoading == YES) {
         [self initializeLoadingIndicator];
     }
-    self.cropOverlay.wallpaperBottomBar.doSetButton.enabled = self.setButtonEnabled;
 }
 
-- (PWWallpaper *)contentView
+- (PWView *)previewView
 {
-    // Returns the PWWallpaper subclass
-    return [[[self wallpaperPreviewViewController] _wallpaperView] contentView];
+    return [[[self wallpaperPreviewViewController] _wallpaperView] contentView].activeView;
 }
 
-- (NSDictionary *)wallpaperForOptions:(NSDictionary *)options
+- (NSDictionary *)wallpaperForIdentifier:(NSString *)identifier options:(NSDictionary *)options
 {
-    NSString *identifier = [options valueForKey:kSBUIMagicWallpaperIdentifierKey];
-    if (identifier == nil) {
-        // assertion for nil identifier
-    }
-    // Mutable options are needed for adding the thumbnail once its been created and updating the options in the case of asynchronous wallpaper loading
-    return @{kSBUIMagicWallpaperIdentifierKey : identifier, kSBUIMagicWallpaperPresetOptionsKey : [[options mutableCopy] autorelease]};
+    NSAssert1(identifier != nil, @"Invalid value for %@", kSBUIMagicWallpaperIdentifierKey);
+    [options setValue:identifier forKey:kSBUIMagicWallpaperIdentifierKey];
+    return @{kSBUIMagicWallpaperIdentifierKey : identifier, kSBUIMagicWallpaperPresetOptionsKey : options};
 }
 
-+ (id)controllerWithWallpaperOptions:(NSDictionary *)options
++ (id)controllerWithIdentifier:(NSString *)identifier options:(NSDictionary *)options asyncWallpaperLoading:(BOOL)asyncWallpaperLoading
 {
-    return [[[self alloc] initWithWallpaperOptions:options] autorelease];
+    return [[[self alloc] initWithIdentifier:identifier options:options asyncWallpaperLoading:asyncWallpaperLoading] autorelease];
 }
 
-- (id)initWithWallpaperOptions:(NSDictionary *)options
+- (id)initWithIdentifier:(NSString *)identifier options:(NSDictionary *)options asyncWallpaperLoading:(BOOL)asyncWallpaperLoading
 {
     NSBundle *bundle = [NSBundle bundleWithPath:@"/System/Library/PreferenceBundles/Wallpaper.bundle"];
     if (!bundle.loaded) {
         [bundle load];
     }
-    NSDictionary *wallpaper = [self wallpaperForOptions:options];
+    // It is dangerous to modify self before calling the super class initializer
+    // All modifications must ONLY modify PWWallpaperPreviewController properties
+    // This is done because SpringBoardFoundation does not support the async loading of wallpapers
+    // In order to avoid the race condition of finishing wallpaper loading before the body of init is called the notifications must be subscribed to before
+    
+    // Mutable options are needed for adding the thumbnail once its been created and updating the options in the case of asynchronous wallpaper loading
+    self.options = [[options mutableCopy] autorelease];
+    self.asyncWallpaperLoading = asyncWallpaperLoading;
+
+    NSNotificationCenter *defaultCenter = [NSNotificationCenter defaultCenter];
+    [defaultCenter addObserver:self selector:@selector(didUpdateOptionsNotification:) name:PWDidUpdateOptionsNotification object:nil];
+    [defaultCenter addObserver:self selector:@selector(loadingDidFinishNotification:) name:PWLoadingDidFinishNotification object:nil];
+    [defaultCenter addObserver:self selector:@selector(loadingDidFailNotification:) name:PWLoadingDidFailNotification object:nil];
+
+    NSDictionary *wallpaper = [self wallpaperForIdentifier:identifier options:self.options];
     if (self = [super initWithMagicWallpaper:wallpaper options:nil]) {
+        
         WallpaperMagicGridViewControllerSpec *spec;
         if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
             spec = [[[NSClassFromString(@"WallpaperMagicAlbumViewControllerPadSpec") alloc] init] autorelease];
@@ -80,47 +96,52 @@ NSString *const kSBUIMagicWallpaperThumbnailNameKey = @"kSBUIMagicWallpaperThumb
         // WallpaperPreviewNavigationController is responsible for orientation of wallpaper previews
         // Retained as self.navigationController during -initWithRootViewController:
         [[[NSClassFromString(@"WallpaperPreviewNavigationController") alloc] initWithRootViewController:self] autorelease];
-        
-        self.asyncWallpaperLoading = NO;
-        self.setButtonEnabled = YES;
     }
     return self;
 }
 
-- (void)initializeLoadingIndicator
+- (void)didUpdateOptionsNotification:(NSNotification *)notification
 {
-    self.activityIndicator = [[[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge] autorelease];
-    self.activityIndicator.center = [self.cropOverlay convertPoint:self.cropOverlay.center fromView:self.cropOverlay.superview];
-    self.activityIndicator.hidesWhenStopped = YES;
-    [self.cropOverlay addSubview:self.activityIndicator];
-    [self.activityIndicator startAnimating];
+    NSDictionary *userInfo = notification.userInfo;
+    NSString *key = [userInfo valueForKey:@"key"];
+    id value = [userInfo valueForKey:@"value"];
+    
+    if (value == [NSNull null]) {
+        [self.options removeObjectForKey:key];
+    } else {
+        [self.options setValue:value forKey:key];
+    }
 }
 
-- (void)stopLoadingIndicator
+- (void)loadingDidFinishNotification:(NSNotification *)notification
 {
-    NSLog(@"\n\n\n\n setButton:%i", self.setButtonEnabled);
-    self.cropOverlay.wallpaperBottomBar.doSetButton.enabled = self.setButtonEnabled;
+    self.asyncWallpaperLoading = NO;
+
+    PLCropOverlayWallpaperBottomBar *bottomBar = [self.cropOverlay wallpaperBottomBar];
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        [bottomBar.doSetHomeScreenButton setEnabled:YES];
+        [bottomBar.doSetLockScreenButton setEnabled:YES];
+        [bottomBar.doSetBothScreenButton setEnabled:YES];
+        [bottomBar.motionToggle setEnabled:YES];
+        
+    } else if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+        [bottomBar.doSetButton setEnabled:YES];
+    }
     [self.activityIndicator stopAnimating];
 }
 
-- (void)beginAsyncWallpaperLoading
-{
-    self.setButtonEnabled = NO;
-    self.asyncWallpaperLoading = YES;
-    if (self.cropOverlay) {
-        self.cropOverlay.wallpaperBottomBar.doSetButton.enabled = self.setButtonEnabled;
-        [self initializeLoadingIndicator];
-    }
-}
-
-- (void)asyncWallpaperLoadingFailedWithTitle:(NSString *)title errorMessage:(NSString *)errorMessage
+- (void)loadingDidFailNotification:(NSNotification *)notification
 {
     self.asyncWallpaperLoading = NO;
-    if (self.cropOverlay != nil) {
-        [self stopLoadingIndicator];
-    }
+
+    NSDictionary *userInfo = notification.userInfo;
+    NSString *title = [userInfo valueForKey:@"title"];
+    NSString *errorMessage = [userInfo valueForKey:@"errorMessage"];
+    
     UIAlertView *alert = [[[UIAlertView alloc] initWithTitle:title message:errorMessage delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil] autorelease];
     [alert show];
+    
+    [self.activityIndicator stopAnimating];
 }
 
 - (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex
@@ -130,17 +151,94 @@ NSString *const kSBUIMagicWallpaperThumbnailNameKey = @"kSBUIMagicWallpaperThumb
     }
 }
 
-- (void)endAsyncWallpaperLoadingWithOptions:(NSDictionary *)options newWallpaper:(BOOL)newWallpaper
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
 {
-    self.setButtonEnabled = YES;
-    self.asyncWallpaperLoading = NO;
-    if (self.cropOverlay != nil) {
-        [self stopLoadingIndicator];
+    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+    self.activityIndicator.center = CGPointMake(size.width / 2, size.height / 2);
+}
+
+- (void)addToggleWithName:(NSString *)name values:(NSArray *)values
+{
+    self.toggleIndex = 0;
+    self.toggleEnabled = YES;
+    self.toggleName = name;
+    self.toggleValues = values;
+    [self initializeToggle];
+}
+
+- (void)initializeToggle
+{
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        PLCropOverlayWallpaperBottomBar *bottomBar = [self.cropOverlay wallpaperBottomBar];
+        PLWallpaperButton *motionToggle = [bottomBar motionToggle];
+        if (motionToggle) {
+            NSString *toggleValue = [self.toggleValues objectAtIndex:self.toggleIndex];
+            NSString *title = [NSString stringWithFormat:@"%@%@", self.toggleName, toggleValue];
+            [motionToggle setTitle:title forState:UIControlStateNormal];
+            [bottomBar setMotionToggleHidden:NO];
+        }
+    } else if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+        
+        ////// alter this to remove the objc_runtime
+        SBSUIWallpaperPreviewView *defaultPreviewView = [[self wallpaperPreviewViewController] _previewView];
+        PWWallpaperPreviewView *previewView = [PWWallpaperPreviewView viewWithPreviewView:defaultPreviewView];
+        
+        SBSUIWallpaperMotionButton *motionButton = [previewView motionButton];
+        [PWToggleButton buttonWithMotionButton:motionButton name:self.toggleName values:self.toggleValues];
     }
-    NSDictionary *wallpaper = [self wallpaperForOptions:options];
-    [self.gridViewController _setVariantBeingPreviewed:wallpaper];
-    [self.contentView updateWallpaperOptions:options newWallpaper:newWallpaper];
-}  
+}
+
+- (void)motionToggledManually:(BOOL)toggled
+{
+    PLCropOverlayWallpaperBottomBar *bottomBar = [self.cropOverlay wallpaperBottomBar];
+    PLWallpaperButton *motionToggle = [bottomBar motionToggle];
+    if (motionToggle) {
+        self.toggleIndex++;
+        if (self.toggleIndex >= self.toggleValues.count) {
+            self.toggleIndex = 0;
+        }
+        NSString *toggleValue = [self.toggleValues objectAtIndex:self.toggleIndex];
+        NSString *title = [NSString stringWithFormat:@"%@%@", self.toggleName, toggleValue];
+        [motionToggle setTitle:title forState:UIControlStateNormal];
+    }
+    [self.previewView toggleButtonClicked:self.toggleIndex];
+}
+
+- (void)beginAsyncWallpaperLoading
+{
+    self.asyncWallpaperLoading = YES;
+    [self initializeLoadingIndicator];
+}
+
+- (void)initializeLoadingIndicator
+{
+    if (self.asyncWallpaperLoading == YES && self.cropOverlay != nil) {
+        PLCropOverlayWallpaperBottomBar *bottomBar = [self.cropOverlay wallpaperBottomBar];
+        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+            
+            UIColor *disabledTextColor = [UIColor lightGrayColor];
+            [bottomBar.doSetHomeScreenButton setTitleColor:disabledTextColor forState:UIControlStateDisabled];
+            [bottomBar.doSetLockScreenButton setTitleColor:disabledTextColor forState:UIControlStateDisabled];
+            [bottomBar.doSetBothScreenButton setTitleColor:disabledTextColor forState:UIControlStateDisabled];
+            [bottomBar.motionToggle setTitleColor:disabledTextColor forState:UIControlStateDisabled];
+            [bottomBar.doSetHomeScreenButton setEnabled:NO];
+            [bottomBar.doSetLockScreenButton setEnabled:NO];
+            [bottomBar.doSetBothScreenButton setEnabled:NO];
+            [bottomBar.motionToggle setEnabled:NO];
+
+        } else if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+            [bottomBar.doSetButton setEnabled:NO];
+        }
+        self.activityIndicator = [[[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge] autorelease];
+        
+        CGRect bounds = [UIScreen mainScreen].bounds;
+        self.activityIndicator.center = CGPointMake(CGRectGetWidth(bounds) / 2, CGRectGetHeight(bounds) / 2);
+        self.activityIndicator.hidesWhenStopped = YES;
+        [self.activityIndicator startAnimating];
+        
+        [self.cropOverlay addSubview:self.activityIndicator];
+    }
+}
 
 - (void)cropOverlayWasCancelled:(PLCropOverlay *)overlay
 {
@@ -174,7 +272,7 @@ NSString *const kSBUIMagicWallpaperThumbnailNameKey = @"kSBUIMagicWallpaperThumb
 
 - (void)setThumbnail:(NSString *)name
 {
-    /*NSBundle *bundle = [NSBundle bundleWithIdentifier:@"com.theronen.weatherwallpapers"];
+    NSBundle *bundle = [NSBundle bundleWithIdentifier:@"com.theronen.weatherwallpapers"];
     
     NSFileManager *fileManager = [NSFileManager defaultManager];
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"SELF contains[c] %@", name];
@@ -184,16 +282,22 @@ NSString *const kSBUIMagicWallpaperThumbnailNameKey = @"kSBUIMagicWallpaperThumb
     }
     NSString *filename = [NSString stringWithFormat:@"%@-%.f.png", name, 10.0f * [[NSDate date] timeIntervalSince1970]];
     NSURL *url = [NSURL URLWithString:filename relativeToURL:bundle.bundleURL];
-    NSData *thumbnail = [self.contentView generateThumbnail];
+    NSData *thumbnail = [self.previewView thumbnail];
+    
+    NSLog(@"\n\n\n\nPREVIEW VIEW:%@", self.previewView);
     [thumbnail writeToURL:url atomically:NO];
     
-    NSMutableDictionary *options = [self.wallpaperPreviewViewController.proceduralWallpaper valueForKey:@"kSBUIMagicWallpaperPresetOptionsKey"];
-    [options setValue:filename forKey:@"kSBUIMagicWallpaperThumbnailNameKey"];*/
+    NSMutableDictionary *options = [[self.wallpaperPreviewViewController valueForKey:@"_proceduralWallpaper"] valueForKey:@"kSBUIMagicWallpaperPresetOptionsKey"];
+    [options setValue:filename forKey:@"kSBUIMagicWallpaperThumbnailNameKey"];
 }
 
 - (void)dealloc
 {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [_toggleName release];
+    [_toggleValues release];
     [_gridViewController release];
+    [_options release];
     [super dealloc];
 }
 

@@ -7,16 +7,17 @@
 //
 
 #import "SBFProceduralWallpaper.h"
-#import "PWWallpaperFactory.h"
- 
-@interface PWWallpaper : SBFProceduralWallpaper
+#import "PWView.h"
+
+extern NSString *const kSBUIMagicWallpaperIdentifierKey;
+extern NSString *const kSBUIMagicWallpaperPresetOptionsKey;
+extern NSString *const kSBUIMagicWallpaperThumbnailNameKey;
+extern NSString *const kSBProceduralWallpaperHomeOptionsKey;
+extern NSString *const kSBProceduralWallpaperLockOptionsKey;
+
+@interface PWWallpaper : SBFProceduralWallpaper <PWViewDelegate>
+@property (readonly, nonatomic, assign) PWView *activeView;
 @property (nonatomic, assign) id <SBFProceduralWallpaperDelegate> delegate;
-+ (BOOL)dynamicBlur;
-+ (int)blurFrameInterval;
-+ (float)blurRadius;
-+ (float)blurScale;
-+ (float)saturationDeltaFactor;
-+ (NSString *)factoryIdentifier;
-- (void)updateWallpaperOptions:(NSDictionary *)options newWallpaper:(BOOL)newWallpaper;
+- (PWView *)initializeWallpaperWithOptions:(NSDictionary *)options;
 @end
  

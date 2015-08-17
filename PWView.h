@@ -6,10 +6,26 @@
 //
 //
 
+extern NSString * const PWDidUpdateOptionsNotification;
+extern NSString * const PWLoadingDidFailNotification;
+extern NSString * const PWLoadingDidFinishNotification;
+
+@class PWView;
+@protocol PWViewDelegate <NSObject>
+@required
+- (void)updateBlurForView:(PWView *)view;
+@end
+
 @interface PWView : UIView
-@property (nonatomic) BOOL isPaused;
 @property (nonatomic) int referenceCount;
-- (void)updateWithOptions:(NSDictionary *)options;
-- (void)resume;  
+@property (nonatomic, assign) id <PWViewDelegate>delegate;
+@property (nonatomic, retain) UIColor *averageColor;
+- (NSData *)thumbnail;
+- (void)viewWillTransitionToSize:(CGSize)size;
+- (void)toggleButtonClicked:(int)toggleIndex;
+- (void)updateOptionsWithValue:(id)value forKey:(NSString *)key;
+- (void)loadingFailedWithTitle:(NSString *)title errorMessage:(NSString *)errorMessage;
+- (void)loadingFinished;
+- (void)resume;
 - (void)pause;
 @end

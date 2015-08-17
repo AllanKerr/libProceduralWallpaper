@@ -6,93 +6,125 @@
 //
 //
 
+
+
+
+
+//apt record
+
+
 #import "PWView.h"
 
-@implementation CALayer (Pause)
+NSString * const PWDidUpdateOptionsNotification = @"PWDidUpdateOptionsNotification";
+NSString * const PWLoadingDidFailNotification = @"PWLoadingDidFailNotification";
+NSString * const PWLoadingDidFinishNotification = @"PWLoadingDidFinishNotification";
 
-// CALayers and UIViews can only be paused in this manner if they don't support auto-resizing
-// Lone CALayers can be paused because auto-resizing is handled at the UIView level
-// UIViews set to UIViewAutoresizingNone can also be paused
-// Note: If a layer that supports auto-resizing is paused in this manner it will lock all interface elements in SpringBoard
-
-- (void)resume
-{
-    if (self.speed == 0.0f) {
-        CFTimeInterval pausedTime = [self timeOffset];
-        self.speed = 1.0f;
-        self.timeOffset = 0.0f;
-        self.beginTime = 0.0f;
-        CFTimeInterval timeSincePause = [self convertTime:CACurrentMediaTime() fromLayer:nil] - pausedTime;
-        self.beginTime = timeSincePause;
-    }
-}
-
-- (void)pause
-{
-    UIView *view = self.delegate;
-    if (view == nil || ([view isKindOfClass:[UIView class]] && view.autoresizingMask == UIViewAutoresizingNone)) {
-        CFTimeInterval pausedTime = [self convertTime:CACurrentMediaTime() fromLayer:nil];
-        self.speed = 0.0f;
-        self.timeOffset = pausedTime;
-    }
-}
-
+@interface PWView ()
+@property (readwrite, atomic, retain) NSDictionary *options;
 @end
 
 @implementation PWView
+
+- (NSString *)description
 {
-    UIColor *_averageColor;
+    return [NSString stringWithFormat:@"<%@: %p; referenceCount:%i isPaused:%i>", [self class], self, self.referenceCount, self.layer.speed == 0.0f];
 }
 
 - (id)init
 {
     CGRect bounds = [UIScreen mainScreen].bounds;
-    return [self initWithFrame:bounds];
+    return [super initWithFrame:bounds];
 }
 
-- (id)initWithFrame:(CGRect)frame
-{
-    if (self = [super initWithFrame:frame]) {
-        self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleBottomMargin;
-    }
-    return self;
-}
-
-- (void)updateWithOptions:(NSDictionary *)options
+- (void)toggleButtonClicked:(int)toggleIndex
 {
     
 }
 
-- (NSString *)description
+- (void)updateOptionsWithValue:(id)value forKey:(NSString *)key
 {
-    return [NSString stringWithFormat:@"<%@: %p; isPaused:%i>", [self class], self, self.isPaused];
+    if (value == nil) {
+        value = [NSNull null];
+    }
+    [self performOnMainThread:^{
+        NSDictionary *userInfo = @{@"value" : value, @"key" : key};
+        NSNotificationCenter *defaultCenter = [NSNotificationCenter defaultCenter];
+        [defaultCenter postNotificationName:PWDidUpdateOptionsNotification object:self userInfo:userInfo];
+    }];
 }
 
-- (UIColor *)averageColor
+- (void)loadingFailedWithTitle:(NSString *)title errorMessage:(NSString *)errorMessage
 {
-    return [UIColor blackColor];
+    [self performOnMainThread:^{
+        NSAssert1(title != nil, @"title can not be nil:%@", title);
+        NSAssert1(errorMessage != nil, @"errorMessage can not be nil:%@", errorMessage);
+        
+        NSDictionary *userInfo = @{@"title" : title, @"errorMessage" : errorMessage};
+        NSNotificationCenter *defaultCenter = [NSNotificationCenter defaultCenter];
+        [defaultCenter postNotificationName:PWLoadingDidFailNotification object:self userInfo:userInfo];
+    }];
 }
 
-// Pausing and resuming of UIViews that support auto-resizing must be done by overriding -resume and -pause
-// It is important to call [super resume] and [super pause] when they are overridden
+- (void)loadingFinished
+{
+    [self performOnMainThread:^{
+        NSNotificationCenter *defaultCenter = [NSNotificationCenter defaultCenter];
+        [defaultCenter postNotificationName:PWLoadingDidFinishNotification object:self];
+    }];
+    [self.delegate updateBlurForView:self];
+}
+
+- (void)performOnMainThread:(void(^)())block
+{
+    if ([NSThread isMainThread] == YES) {
+        block();
+    } else {
+        dispatch_sync(dispatch_get_main_queue(), block);
+    }
+}
+
+- (NSData *)thumbnail
+{
+    // Downsampled to half the size because the thumbnails are not displayed fullscreen
+    CGSize size = CGSizeMake(0.5f * CGRectGetWidth(self.frame), 0.5f * CGRectGetHeight(self.frame));
+    UIGraphicsBeginImageContext(size);
+    
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    CGContextTranslateCTM(context, 0, size.height);
+    CGContextScaleCTM(context, 1, -1);
+
+    [self drawViewHierarchyInRect:(CGRect){CGPointZero, size} afterScreenUpdates:NO];
+    UIImage *thumbnail = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+     
+    return UIImagePNGRepresentation(thumbnail);    
+}
+
+- (void)viewWillTransitionToSize:(CGSize)size
+{
+
+}
 
 - (void)resume
 {
-    if (self.isPaused) {
-        for (CALayer *layer in self.layer.sublayers) {
-            [layer resume];
-        }
-        self.isPaused = NO;
+    if (self.layer.speed == 0.0f) {
+        NSLog(@"\n\n\n\n RESUME");
+        CFTimeInterval pausedTime = [self.layer timeOffset];
+        self.layer.speed = 1.0f;
+        self.layer.timeOffset = 0.0f;
+        self.layer.beginTime = 0.0f;
+        CFTimeInterval timeSincePause = [self.layer convertTime:CACurrentMediaTime() fromLayer:nil] - pausedTime;
+        self.layer.beginTime = timeSincePause;
     }
 }
 
 - (void)pause
 {
-    if (!self.isPaused) {
-        for (CALayer *layer in self.layer.sublayers) {
-            [layer pause];
-        }
-        self.isPaused = YES;
+    if (self.layer.speed == 1.0f) {
+        NSLog(@"\n\n\n\n PAUSE");
+        CFTimeInterval pausedTime = [self.layer convertTime:CACurrentMediaTime() fromLayer:nil];
+        self.layer.speed = 0.0f;
+        self.layer.timeOffset = pausedTime;
     }
 }
 

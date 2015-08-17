@@ -8,6 +8,8 @@
 
 /* Begin PBXFileReference section */
 		111974E81AC71C8C00B2044B /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		1139920C1B81604E00C49A24 /* PWLoader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PWLoader.m; sourceTree = "<group>"; };
+		1139920D1B8160A400C49A24 /* PWLoader.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = PWLoader.plist; sourceTree = "<group>"; };
 		116037141AC68B140083E61B /* CARenderServerAPI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CARenderServerAPI.h; sourceTree = "<group>"; };
 		116037151AC68B140083E61B /* IOSurfaceAPI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IOSurfaceAPI.h; sourceTree = "<group>"; };
 		116037161AC68B140083E61B /* SBFProceduralWallpaper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SBFProceduralWallpaper.h; sourceTree = "<group>"; };
@@ -16,11 +18,15 @@
 		116037191AC68B1C0083E61B /* PWView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PWView.m; sourceTree = "<group>"; };
 		1160371A1AC68B1C0083E61B /* PWWallpaper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PWWallpaper.h; sourceTree = "<group>"; };
 		1160371B1AC68B1C0083E61B /* PWWallpaper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PWWallpaper.m; sourceTree = "<group>"; };
-		1160371C1AC68B1C0083E61B /* PWWallpaperCache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PWWallpaperCache.h; sourceTree = "<group>"; };
-		1160371D1AC68B1C0083E61B /* PWWallpaperCache.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PWWallpaperCache.m; sourceTree = "<group>"; };
-		1160371E1AC68B1C0083E61B /* PWWallpaperFactory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PWWallpaperFactory.h; sourceTree = "<group>"; };
 		1160371F1AC68B230083E61B /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		116037201AC68B280083E61B /* control */ = {isa = PBXFileReference; lastKnownFileType = text; path = control; sourceTree = "<group>"; };
+		116F00E01B4703B6008CF358 /* SBSUIWallpaperMotionButton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SBSUIWallpaperMotionButton.h; sourceTree = "<group>"; };
+		116F00E11B4703BF008CF358 /* SBFButton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SBFButton.h; sourceTree = "<group>"; };
+		116F00E21B470456008CF358 /* SBSUIWallpaperPreviewView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SBSUIWallpaperPreviewView.h; sourceTree = "<group>"; };
+		116F00E31B476A7D008CF358 /* PWToggleButton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PWToggleButton.h; sourceTree = "<group>"; };
+		116F00E41B476A7D008CF358 /* PWToggleButton.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PWToggleButton.m; sourceTree = "<group>"; };
+		116F00E71B477F25008CF358 /* PWWallpaperPreviewView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PWWallpaperPreviewView.h; sourceTree = "<group>"; };
+		116F00E81B477F25008CF358 /* PWWallpaperPreviewView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PWWallpaperPreviewView.m; sourceTree = "<group>"; };
 		117005CA1AC7A3BE00020CF1 /* WallpaperMagicAlbumViewControllerPadSpec.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WallpaperMagicAlbumViewControllerPadSpec.h; sourceTree = "<group>"; };
 		117005CB1AC7A3BE00020CF1 /* WallpaperMagicAlbumViewControllerPhoneSpec.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WallpaperMagicAlbumViewControllerPhoneSpec.h; sourceTree = "<group>"; };
 		117005CC1AC7A3BE00020CF1 /* WallpaperMagicGridViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WallpaperMagicGridViewController.h; sourceTree = "<group>"; };
@@ -38,8 +44,6 @@
 		117005DA1AC7D06600020CF1 /* SBSUIWallpaperPreviewViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SBSUIWallpaperPreviewViewController.h; sourceTree = "<group>"; };
 		117005DB1AC7D11700020CF1 /* PUPhotosGridViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PUPhotosGridViewController.h; sourceTree = "<group>"; };
 		117005DD1AC8744400020CF1 /* SBFWallpaperView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SBFWallpaperView.h; sourceTree = "<group>"; };
-		1170081A1AC9248A00020CF1 /* PWWallpaperBlur.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PWWallpaperBlur.h; sourceTree = "<group>"; };
-		1170081B1AC9248A00020CF1 /* PWWallpaperBlur.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PWWallpaperBlur.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -57,17 +61,18 @@
 				111974E81AC71C8C00B2044B /* .gitignore */,
 				116037201AC68B280083E61B /* control */,
 				1160371F1AC68B230083E61B /* Makefile */,
+				1139920D1B8160A400C49A24 /* PWLoader.plist */,
+				1139920C1B81604E00C49A24 /* PWLoader.m */,
 				116037181AC68B1C0083E61B /* PWView.h */,
 				116037191AC68B1C0083E61B /* PWView.m */,
 				1160371A1AC68B1C0083E61B /* PWWallpaper.h */,
 				1160371B1AC68B1C0083E61B /* PWWallpaper.m */,
-				1170081A1AC9248A00020CF1 /* PWWallpaperBlur.h */,
-				1170081B1AC9248A00020CF1 /* PWWallpaperBlur.m */,
-				1160371C1AC68B1C0083E61B /* PWWallpaperCache.h */,
-				1160371D1AC68B1C0083E61B /* PWWallpaperCache.m */,
-				1160371E1AC68B1C0083E61B /* PWWallpaperFactory.h */,
 				117005D11AC7CF2400020CF1 /* PWWallpaperPreviewController.h */,
 				117005D21AC7CF2400020CF1 /* PWWallpaperPreviewController.m */,
+				116F00E71B477F25008CF358 /* PWWallpaperPreviewView.h */,
+				116F00E81B477F25008CF358 /* PWWallpaperPreviewView.m */,
+				116F00E31B476A7D008CF358 /* PWToggleButton.h */,
+				116F00E41B476A7D008CF358 /* PWToggleButton.m */,
 			);
 			name = libProceduralWallpaper;
 			sourceTree = "<group>";
@@ -88,7 +93,10 @@
 				117005CC1AC7A3BE00020CF1 /* WallpaperMagicGridViewController.h */,
 				117005CD1AC7A3BE00020CF1 /* WallpaperMagicGridViewControllerSpec.h */,
 				117005CE1AC7A3BE00020CF1 /* WallpaperPreviewNavigationController.h */,
+				116F00E21B470456008CF358 /* SBSUIWallpaperPreviewView.h */,
 				117005DA1AC7D06600020CF1 /* SBSUIWallpaperPreviewViewController.h */,
+				116F00E01B4703B6008CF358 /* SBSUIWallpaperMotionButton.h */,
+				116F00E11B4703BF008CF358 /* SBFButton.h */,
 				117005DD1AC8744400020CF1 /* SBFWallpaperView.h */,
 				116037161AC68B140083E61B /* SBFProceduralWallpaper.h */,
 				116037171AC68B140083E61B /* SBFProceduralWallpaperDelegate.h */,

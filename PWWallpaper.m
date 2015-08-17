@@ -11,12 +11,10 @@
 #import "IOSurfaceAPI.h"
 #import "CARenderServerAPI.h"
 #import <Accelerate/Accelerate.h>
+#import "SBSUIConstants.h"
 
-NSString *const kSBUIMagicWallpaperIdentifierKey = @"kSBUIMagicWallpaperIdentifierKey";
-NSString *const kSBUIMagicWallpaperPresetOptionsKey = @"kSBUIMagicWallpaperPresetOptionsKey";
-NSString *const kSBUIMagicWallpaperThumbnailNameKey = @"kSBUIMagicWallpaperThumbnailNameKey";
-NSString *const kSBProceduralWallpaperHomeOptionsKey = @"kSBProceduralWallpaperHomeOptionsKey";
-NSString *const kSBProceduralWallpaperLockOptionsKey = @"kSBProceduralWallpaperLockOptionsKey";
+static NSString *const kSBProceduralWallpaperHomeOptionsKey = @"kSBProceduralWallpaperHomeOptionsKey";
+static NSString *const kSBProceduralWallpaperLockOptionsKey = @"kSBProceduralWallpaperLockOptionsKey";
 
 @interface UIWindow (Context)
 - (uint32_t)_contextId;
@@ -302,8 +300,8 @@ NSString *const kSBProceduralWallpaperLockOptionsKey = @"kSBProceduralWallpaperL
 - (void)dealloc
 {
     NSLog(@"\n\n\n\n\ndealloc PWWallpaper");
-    [_userDefaults removeObserver:self forKeyPath:@"kSBProceduralWallpaperHomeOptionsKey"];
-    [_userDefaults removeObserver:self forKeyPath:@"kSBProceduralWallpaperLockOptionsKey"];
+    [_userDefaults removeObserver:self forKeyPath:kSBProceduralWallpaperHomeOptionsKey];
+    [_userDefaults removeObserver:self forKeyPath:kSBProceduralWallpaperLockOptionsKey];
     [_userDefaults release];
     [_wallpapers release];
     [super dealloc];

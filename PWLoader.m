@@ -16,7 +16,6 @@ static Class (*orig_SBFMagicWallpaperClassForIdentifier)(NSString *identifier);
 
 static Class hook_SBFMagicWallpaperClassForIdentifier(NSString *identifier)
 {
-    NSLog(@"\n\n\n\n HOOK");
     Class class = orig_SBFMagicWallpaperClassForIdentifier(identifier);
     if (class == nil) {
         NSArray *contents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:PWWallpaperDirectory error:nil];
@@ -27,7 +26,6 @@ static Class hook_SBFMagicWallpaperClassForIdentifier(NSString *identifier)
                 NSArray *classNames = [bundle objectForInfoDictionaryKey:SBProceduralWallpaperClassNames];
                 if ([classNames containsObject:identifier]) {
                     class = [bundle classNamed:identifier];
-                    NSLog(@"\n\n\n\n\n FOUDNC LASS:%@", class);
                     break;
                 }
             }
@@ -56,11 +54,6 @@ static Class hook_SBFMagicWallpaperClassForIdentifier(NSString *identifier)
     if ([bundle.bundleIdentifier isEqualToString:@"com.apple.wallpaper.settings"]) {
         void *SBFMagicWallpaperClassForIdentifier = MSFindSymbol(NULL, "__SBFMagicWallpaperClassForIdentifier");
         MSHookFunction(SBFMagicWallpaperClassForIdentifier, (void *)hook_SBFMagicWallpaperClassForIdentifier, (void **)&orig_SBFMagicWallpaperClassForIdentifier);
-        if (SBFMagicWallpaperClassForIdentifier == NULL) {
-            NSLog(@"\n\n\n MISSED SYMBOL");
-        } else {
-            NSLog(@"\n\n\n FOUND SYMBOL");
-        }
     }
 }
 
@@ -77,13 +70,7 @@ CHConstructor
     if ([[NSBundle mainBundle].bundleIdentifier isEqualToString:@"com.apple.springboard"]) {
         void *SBFMagicWallpaperClassForIdentifier = MSFindSymbol(NULL, "__SBFMagicWallpaperClassForIdentifier");
         MSHookFunction(SBFMagicWallpaperClassForIdentifier, (void *)hook_SBFMagicWallpaperClassForIdentifier, (void **)&orig_SBFMagicWallpaperClassForIdentifier);
-        if (SBFMagicWallpaperClassForIdentifier == NULL) {
-            NSLog(@"\n\n\n MISSED SYMBOL");
-        } else {
-            NSLog(@"\n\n\n FOUND SYMBOL");
-        }
     } else {
-        NSLog(@"\n\n\n\n\n\n INIT");
         [[PWLoader alloc] init];
     }
 }

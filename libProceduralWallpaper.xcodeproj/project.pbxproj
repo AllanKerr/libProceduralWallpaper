@@ -10,6 +10,7 @@
 		111974E81AC71C8C00B2044B /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		1139920C1B81604E00C49A24 /* PWLoader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PWLoader.m; sourceTree = "<group>"; };
 		1139920D1B8160A400C49A24 /* PWLoader.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = PWLoader.plist; sourceTree = "<group>"; };
+		113992161B81CA2D00C49A24 /* SBSUIConstants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SBSUIConstants.h; sourceTree = "<group>"; };
 		116037141AC68B140083E61B /* CARenderServerAPI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CARenderServerAPI.h; sourceTree = "<group>"; };
 		116037151AC68B140083E61B /* IOSurfaceAPI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IOSurfaceAPI.h; sourceTree = "<group>"; };
 		116037161AC68B140083E61B /* SBFProceduralWallpaper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SBFProceduralWallpaper.h; sourceTree = "<group>"; };
@@ -47,6 +48,45 @@
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		1139920E1B81BA2700C49A24 /* layout */ = {
+			isa = PBXGroup;
+			children = (
+				1139920F1B81BA2700C49A24 /* DEBIAN */,
+				113992101B81BA2700C49A24 /* Library */,
+			);
+			path = layout;
+			sourceTree = "<group>";
+		};
+		1139920F1B81BA2700C49A24 /* DEBIAN */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = DEBIAN;
+			sourceTree = "<group>";
+		};
+		113992101B81BA2700C49A24 /* Library */ = {
+			isa = PBXGroup;
+			children = (
+				113992111B81BA2700C49A24 /* Application Support */,
+			);
+			path = Library;
+			sourceTree = "<group>";
+		};
+		113992111B81BA2700C49A24 /* Application Support */ = {
+			isa = PBXGroup;
+			children = (
+				113992131B81BFF600C49A24 /* libProceduralWallpaper */,
+			);
+			path = "Application Support";
+			sourceTree = "<group>";
+		};
+		113992131B81BFF600C49A24 /* libProceduralWallpaper */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = libProceduralWallpaper;
+			sourceTree = "<group>";
+		};
 		1160370B1AC68A830083E61B = {
 			isa = PBXGroup;
 			children = (
@@ -58,6 +98,7 @@
 			isa = PBXGroup;
 			children = (
 				116037131AC68B140083E61B /* include */,
+				1139920E1B81BA2700C49A24 /* layout */,
 				111974E81AC71C8C00B2044B /* .gitignore */,
 				116037201AC68B280083E61B /* control */,
 				1160371F1AC68B230083E61B /* Makefile */,
@@ -96,6 +137,7 @@
 				116F00E21B470456008CF358 /* SBSUIWallpaperPreviewView.h */,
 				117005DA1AC7D06600020CF1 /* SBSUIWallpaperPreviewViewController.h */,
 				116F00E01B4703B6008CF358 /* SBSUIWallpaperMotionButton.h */,
+				113992161B81CA2D00C49A24 /* SBSUIConstants.h */,
 				116F00E11B4703BF008CF358 /* SBFButton.h */,
 				117005DD1AC8744400020CF1 /* SBFWallpaperView.h */,
 				116037161AC68B140083E61B /* SBFProceduralWallpaper.h */,

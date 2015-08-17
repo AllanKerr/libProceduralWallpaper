@@ -11,9 +11,12 @@
 #import "WallpaperMagicGridViewController.h"
 #import "PLWallpaperButton.h"
 #import "PWWallpaper.h"
+#import "SBSUIConstants.h"
 
 #import "PWWallpaperPreviewView.h"
 #import "PWToggleButton.h"
+
+static NSString *const PWApplicationSupport = @"libProceduralWallpaper";
 
 @interface PWWallpaperPreviewController ()
 @property (nonatomic) BOOL asyncWallpaperLoading;
@@ -25,7 +28,7 @@
 @property (nonatomic, assign) UIActivityIndicatorView *activityIndicator;
 @property (nonatomic, retain) WallpaperMagicGridViewController *gridViewController;
 @end
-
+ 
 @implementation PWWallpaperPreviewController
 
 - (void)viewDidLoad
@@ -87,7 +90,7 @@
             spec = [[[NSClassFromString(@"WallpaperMagicAlbumViewControllerPhoneSpec") alloc] init] autorelease];
         }
         // WallpaperMagicGridViewController is the view controller responsible for displaying the wallpapers in a grid pattern
-        // It is also responsible for the handling delegate methods called when the wallpaper is set and sending the message to SpringBoard
+        // It is also responsible for handling delegate methods called when the wallpaper is set and sending the message to SpringBoard
         // SBSetProceduralWallpaper is called which is part of SpringBoard's MIG subsystem
         self.gridViewController = [[[NSClassFromString(@"WallpaperMagicGridViewController") alloc] initWithSpec:spec] autorelease];
         [self.gridViewController _setVariantBeingPreviewed:wallpaper];
@@ -272,23 +275,26 @@
 
 - (void)setThumbnail:(NSString *)name
 {
-    NSBundle *bundle = [NSBundle bundleWithIdentifier:@"com.theronen.weatherwallpapers"];
+    NSString *basePath = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSSystemDomainMask, YES) objectAtIndex:0];
+    NSString *applicationSupportPath = [basePath stringByAppendingPathComponent:PWApplicationSupport];
     
     NSFileManager *fileManager = [NSFileManager defaultManager];
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"SELF contains[c] %@", name];
-    NSArray *files = [bundle pathsForResourcesOfType:@".png" inDirectory:nil];
+    NSArray *files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:applicationSupportPath error:nil];
     for (NSString *path in [files filteredArrayUsingPredicate:predicate]) {
         [fileManager removeItemAtPath:path error:nil];
     }
-    NSString *filename = [NSString stringWithFormat:@"%@-%.f.png", name, 10.0f * [[NSDate date] timeIntervalSince1970]];
-    NSURL *url = [NSURL URLWithString:filename relativeToURL:bundle.bundleURL];
+    // Multiplied by 10 to prevent identical file names if the same wallpaper is set twice in one second
+    NSString *filename = [NSString stringWithFormat:@"%@-%.f.png", name, 10.0f * [NSDate date].timeIntervalSince1970];
+    NSString *path = [applicationSupportPath stringByAppendingPathComponent:filename];
     NSData *thumbnail = [self.previewView thumbnail];
-    
-    NSLog(@"\n\n\n\nPREVIEW VIEW:%@", self.previewView);
-    [thumbnail writeToURL:url atomically:NO];
-    
-    NSMutableDictionary *options = [[self.wallpaperPreviewViewController valueForKey:@"_proceduralWallpaper"] valueForKey:@"kSBUIMagicWallpaperPresetOptionsKey"];
-    [options setValue:filename forKey:@"kSBUIMagicWallpaperThumbnailNameKey"];
+    [thumbnail writeToFile:path atomically:YES];
+
+    // All procedural wallpapers have a symoblic link pointing to the application support directory
+    // This allows thumbnails to be saved to the libProceduralWallpaper support directory rather than the specific wallpaper bundles
+    NSString *linkedPath = [PWApplicationSupport stringByAppendingPathComponent:filename];
+    NSMutableDictionary *options = [[self.wallpaperPreviewViewController valueForKey:@"_proceduralWallpaper"] valueForKey:kSBUIMagicWallpaperPresetOptionsKey];
+    [options setValue:linkedPath forKey:kSBUIMagicWallpaperThumbnailNameKey];
 }
 
 - (void)dealloc

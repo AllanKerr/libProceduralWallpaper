@@ -6,4 +6,4 @@ theos/
 _/
 obj/
 *.deb
-UserInterfaceState.xcuserstate
+xcuserdata/

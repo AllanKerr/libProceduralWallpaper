@@ -7,3 +7,4 @@ _/
 obj/
 *.deb
 xcuserdata
+*.xcuserstate

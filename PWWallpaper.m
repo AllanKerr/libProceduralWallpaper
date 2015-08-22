@@ -187,7 +187,7 @@ static NSString *const kSBProceduralWallpaperLockOptionsKey = @"kSBProceduralWal
     CGFloat blue = data[0] / 255.0f;
     CGFloat green = data[1] / 255.0f;
     CGFloat red = data[2] / 255.0f;
-        
+    
     return [UIColor colorWithRed:red green:green blue:blue alpha:1.0f];
 }
 
@@ -201,8 +201,6 @@ static NSString *const kSBProceduralWallpaperLockOptionsKey = @"kSBProceduralWal
     void *surface = [self surfaceForRect:frame];
     IOSurfaceLock(surface, 0, NULL);
     CARenderServerRenderLayerWithTransform(MACH_PORT_NULL, [self.window _contextId], (uint64_t)self.layer, surface, 0, 0, &transform);
-    
- 
 
     vImage_Buffer effectInBuffer;
     vImage_Buffer scratchBuffer1;
@@ -294,7 +292,14 @@ static NSString *const kSBProceduralWallpaperLockOptionsKey = @"kSBProceduralWal
 
 - (UIColor *)averageLifetimeColor
 {
-    return [self computeAverageColor];
+    UIColor *averageColor;
+    if ([self.activeView supportsAverageColor]) {
+        averageColor = [self computeAverageColor];
+        NSLog(@"\n\n\n\n AVERAGE COLOR:%@", averageColor);
+    } else {
+        averageColor = nil;
+    }
+    return averageColor;
 }
 
 - (void)dealloc

@@ -7,14 +7,14 @@
 	<key>IDESourceControlProjectIdentifier</key>
 	<string>6081EC25-F163-45CD-9EA8-E0825A5181C5</string>
 	<key>IDESourceControlProjectName</key>
-	<string>project</string>
+	<string>libProceduralWallpaper</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
 		<key>5207746B67F625B711E439DA5829F0E4FF4F2F2A</key>
 		<string>https://github.com/AllanKerr/libProceduralWallpaper</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>libProceduralWallpaper.xcodeproj/project.xcworkspace</string>
+	<string>libProceduralWallpaper.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>5207746B67F625B711E439DA5829F0E4FF4F2F2A</key>

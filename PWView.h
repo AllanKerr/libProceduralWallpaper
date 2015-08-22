@@ -21,6 +21,7 @@ extern NSString * const PWLoadingDidFinishNotification;
 @property (nonatomic, assign) id <PWViewDelegate>delegate;
 @property (nonatomic, retain) UIColor *averageColor;
 - (NSData *)thumbnail;
+- (BOOL)supportsAverageColor;
 - (void)viewWillTransitionToSize:(CGSize)size;
 - (void)toggleButtonClicked:(int)toggleIndex;
 - (void)updateOptionsWithValue:(id)value forKey:(NSString *)key;

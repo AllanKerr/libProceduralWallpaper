@@ -30,6 +30,11 @@ NSString * const PWLoadingDidFinishNotification = @"PWLoadingDidFinishNotificati
     return [NSString stringWithFormat:@"<%@: %p; referenceCount:%i isPaused:%i>", [self class], self, self.referenceCount, self.layer.speed == 0.0f];
 }
 
+- (BOOL)supportsAverageColor
+{
+    return YES;
+}
+
 - (id)init
 {
     CGRect bounds = [UIScreen mainScreen].bounds;

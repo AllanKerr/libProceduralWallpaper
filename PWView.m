@@ -27,7 +27,7 @@ NSString * const PWLoadingDidFinishNotification = @"PWLoadingDidFinishNotificati
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"<%@: %p; referenceCount:%i isPaused:%i>", [self class], self, self.referenceCount, self.layer.speed == 0.0f];
+    return [NSString stringWithFormat:@"<%@: %p; referenceCount:%i hidden:%i isPaused:%i>", [self class], self, self.referenceCount, self.hidden, self.layer.speed == 0.0f];
 }
 
 - (BOOL)supportsAverageColor

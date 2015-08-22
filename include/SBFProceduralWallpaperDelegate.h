@@ -10,4 +10,5 @@
 @required
 - (void)wallpaper:(id)arg1 didGenerateBlur:(void *)arg2 forRect:(CGRect)arg3;
 - (void)wallpaper:(id)arg1 didComputeAverageColor:(id)arg2 forRect:(CGRect)arg3;
+- (void)_sample;
 @end 

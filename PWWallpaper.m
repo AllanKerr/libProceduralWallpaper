@@ -120,6 +120,14 @@ static NSString *const kSBProceduralWallpaperLockOptionsKey = @"kSBProceduralWal
     }
     [view setHidden:NO];
     [self addSubview:view];
+    
+    // Updates blur and averageColor when activeView changes
+    dispatch_async(dispatch_get_main_queue(), ^{
+        void *blurSurface = [self computeBlurs];
+        [self.delegate wallpaper:self didGenerateBlur:blurSurface forRect:self.bounds];
+        // Forces averageLifetimeColor to be updated
+        [self.delegate _sample];
+    });
 }
 
 - (PWView *)wallpaperForOptions:(NSDictionary *)options
@@ -166,8 +174,9 @@ static NSString *const kSBProceduralWallpaperLockOptionsKey = @"kSBProceduralWal
 {
     if (self.activeView == view) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            void *blurSurface = [self computeBlurs];
-            [self.delegate wallpaper:self didGenerateBlur:blurSurface forRect:self.bounds];
+            //void *blurSurface = [self computeBlurs];
+            //NSLog(@"\n\n\n\n\n\n UPDAET BLUR:%@", view);
+            //[self.delegate wallpaper:self didGenerateBlur:blurSurface forRect:self.bounds];
         });
     }
 }
@@ -285,17 +294,11 @@ static NSString *const kSBProceduralWallpaperLockOptionsKey = @"kSBProceduralWal
     return surface;
 }
 
-- (void *)copyBlurForRect:(CGRect *)rect
-{
-    return [self computeBlurs];
-}
-
 - (UIColor *)averageLifetimeColor
 {
     UIColor *averageColor;
     if ([self.activeView supportsAverageColor]) {
         averageColor = [self computeAverageColor];
-        NSLog(@"\n\n\n\n AVERAGE COLOR:%@", averageColor);
     } else {
         averageColor = nil;
     }

@@ -43,11 +43,6 @@ static NSString *const PWApplicationSupport = @"libProceduralWallpaper";
     }
 }
 
-- (NSDictionary *)previewOptions
-{
-    return [[self.options copy] autorelease];
-}
-
 - (PWView *)previewView
 {
     return [[[self wallpaperPreviewViewController] _wallpaperView] contentView].activeView;
@@ -259,8 +254,8 @@ static NSString *const PWApplicationSupport = @"libProceduralWallpaper";
 
 - (void)_cropWallpaperFinished:(PLCropOverlay *)overlay
 {
-    if ([self.previewDelegate respondsToSelector:@selector(wallpaperPreviewControllerWillFinish:)]) {
-        [self.previewDelegate wallpaperPreviewControllerWillFinish:self];
+    if ([self.previewDelegate respondsToSelector:@selector(wallpaperPreviewController: willFinishWithOptions:)]) {
+        [self.previewDelegate wallpaperPreviewController:self willFinishWithOptions:self.options];
     }
     [super _cropWallpaperFinished:overlay];
     [self dismissModalViewControllerAnimated:YES];
@@ -268,27 +263,18 @@ static NSString *const PWApplicationSupport = @"libProceduralWallpaper";
 
 - (void)setImageAsHomeScreenAndLockScreenClicked:(id)sender
 {
-    if ([self.previewDelegate respondsToSelector:@selector(wallpaperPreviewController: willSetWallpaperForVariant:)]) {
-        [self.previewDelegate wallpaperPreviewController:self willSetWallpaperForVariant:2];
-    }
     [self setThumbnail:@"ProceduralShared_thumb"];
     [super setImageAsHomeScreenAndLockScreenClicked:sender];
 }
 
 - (void)setImageAsLockScreenClicked:(id)sender
 {
-    if ([self.previewDelegate respondsToSelector:@selector(wallpaperPreviewController: willSetWallpaperForVariant:)]) {
-        [self.previewDelegate wallpaperPreviewController:self willSetWallpaperForVariant:0];
-    }
     [self setThumbnail:@"ProceduralLock_thumb"];
     [super setImageAsLockScreenClicked:sender];
 }
 
 - (void)setImageAsHomeScreenClicked:(id)sender
 {
-    if ([self.previewDelegate respondsToSelector:@selector(wallpaperPreviewController: willSetWallpaperForVariant:)]) {
-        [self.previewDelegate wallpaperPreviewController:self willSetWallpaperForVariant:1];
-    }
     [self setThumbnail:@"ProceduralHome_thumb"];
     [super setImageAsHomeScreenClicked:sender];
 }

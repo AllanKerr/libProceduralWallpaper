@@ -67,6 +67,7 @@ static NSString *const kSBProceduralWallpaperLockOptionsKey = @"kSBProceduralWal
 {
     NSArray *views = [self.wallpapers allValues];
     for (PWView *view in views) {
+        // Resize PWView subclasses
         [view viewWillTransitionToSize:self.frame.size];
     }
     [super layoutSubviews];
@@ -87,20 +88,25 @@ static NSString *const kSBProceduralWallpaperLockOptionsKey = @"kSBProceduralWal
     return self;
 }
 
+// Called whenever the lock or home screen wallpaper is changed
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
     PWView *oldView = nil;
     NSDictionary *oldOptions = [change valueForKey:@"old"];
+    // The oldView has been replaced
     if (![oldOptions isEqual:[NSNull null]] && [oldOptions valueForKey:kSBUIMagicWallpaperIdentifierKey]) {
+        // It may still be being used for the other wallpaper requiring manual reference count handling
         oldView = [self.wallpapers objectForKey:oldOptions];
         oldView.referenceCount--;
     }
     NSDictionary *newOptions = [change valueForKey:@"new"];
+    // New options are NSNull when a still wallpaper is set
     if (![newOptions isEqual:[NSNull null]] && [newOptions valueForKey:kSBUIMagicWallpaperIdentifierKey]) {
         PWView *newView = [self wallpaperForOptions:newOptions];
         newView.referenceCount++;
     }
     if (oldView != nil && oldView.referenceCount <= 0) {
+        // completely remove the oldView if it is no longer referenced
         if (self.activeView == oldView) {
             self.activeView = nil;
         }
@@ -113,6 +119,7 @@ static NSString *const kSBProceduralWallpaperLockOptionsKey = @"kSBProceduralWal
 - (void)setWallpaperOptions:(NSDictionary *)options
 {
     PWView *view = [self wallpaperForOptions:options];
+    // Sets the view as the activeView
     if (view && view != self.activeView) {
         [self.activeView setHidden:YES];
         [self.activeView pause];
@@ -136,8 +143,8 @@ static NSString *const kSBProceduralWallpaperLockOptionsKey = @"kSBProceduralWal
     if (options != nil) {
         view = [self.wallpapers objectForKey:options];
         if (view == nil) {
+            // Inititalizes a new PWView subclass if one isn't associated with the options
             view = [self initializeWallpaperWithOptions:options];
-            view.delegate = self;
             [self.wallpapers setObject:view forKey:options];
         }
     }
@@ -145,14 +152,15 @@ static NSString *const kSBProceduralWallpaperLockOptionsKey = @"kSBProceduralWal
     return view;
 }
 
+// Must be implemented by subclasses
 - (PWView *)initializeWallpaperWithOptions:(NSDictionary *)options
 {
     [self doesNotRecognizeSelector:_cmd];
     return nil;
 }
 
-// called whenever a wallpaper created from this factory is deallocated
-// allows for storing assets in the wallpaper factory and sharing them between wallpapers
+// called whenever a PWView subclass is deallocated
+// allows for storing assets in a shared chache and sharing them between PWViews
 - (void)clearUnusedAssets
 {
     
@@ -170,23 +178,13 @@ static NSString *const kSBProceduralWallpaperLockOptionsKey = @"kSBProceduralWal
     return IOSurfaceCreate(properties);
 }
 
-- (void)updateBlurForView:(PWView *)view
-{
-    if (self.activeView == view) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            //void *blurSurface = [self computeBlurs];
-            //NSLog(@"\n\n\n\n\n\n UPDAET BLUR:%@", view);
-            //[self.delegate wallpaper:self didGenerateBlur:blurSurface forRect:self.bounds];
-        });
-    }
-}
-
 - (UIColor *)computeAverageColor
 {
     CGSize size = self.bounds.size;
     CGRect frame = CGRectMake(0.0f, 0.0f, 1.0f, 1.0f);
     CATransform3D transform = CATransform3DMakeScale(CGRectGetWidth(frame)/size.width, CGRectGetHeight(frame)/size.height, 1.0f);
     
+    // Render the layer in a 1x1 frame allowing CARenderServer to handle the downsampling
     void *surface = [self surfaceForRect:frame];
     IOSurfaceLock(surface, 0, NULL);
     CARenderServerRenderLayerWithTransform(MACH_PORT_NULL, [self.window _contextId], (uint64_t)self.layer, surface, 0, 0, &transform);
@@ -200,7 +198,7 @@ static NSString *const kSBProceduralWallpaperLockOptionsKey = @"kSBProceduralWal
     return [UIColor colorWithRed:red green:green blue:blue alpha:1.0f];
 }
 
-
+// Based on https://developer.apple.com/library/ios/samplecode/UIImageEffects/Listings/UIImageEffects_UIImageEffects_m.html
 - (void *)computeBlurs
 {
     CGSize size = self.bounds.size;
@@ -294,6 +292,7 @@ static NSString *const kSBProceduralWallpaperLockOptionsKey = @"kSBProceduralWal
     return surface;
 }
 
+// Generates the average color if the activeView supports it
 - (UIColor *)averageLifetimeColor
 {
     UIColor *averageColor;

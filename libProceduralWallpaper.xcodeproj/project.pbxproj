@@ -11,6 +11,7 @@
 		1139920C1B81604E00C49A24 /* PWLoader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PWLoader.m; sourceTree = "<group>"; };
 		1139920D1B8160A400C49A24 /* PWLoader.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = PWLoader.plist; sourceTree = "<group>"; };
 		113992161B81CA2D00C49A24 /* SBSUIConstants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SBSUIConstants.h; sourceTree = "<group>"; };
+		115F30091B8928F200F806A0 /* libProceduralWallpaper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = libProceduralWallpaper.h; sourceTree = "<group>"; };
 		116037141AC68B140083E61B /* CARenderServerAPI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CARenderServerAPI.h; sourceTree = "<group>"; };
 		116037151AC68B140083E61B /* IOSurfaceAPI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IOSurfaceAPI.h; sourceTree = "<group>"; };
 		116037161AC68B140083E61B /* SBFProceduralWallpaper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SBFProceduralWallpaper.h; sourceTree = "<group>"; };
@@ -104,6 +105,7 @@
 				1160371F1AC68B230083E61B /* Makefile */,
 				1139920D1B8160A400C49A24 /* PWLoader.plist */,
 				1139920C1B81604E00C49A24 /* PWLoader.m */,
+				115F30091B8928F200F806A0 /* libProceduralWallpaper.h */,
 				116037181AC68B1C0083E61B /* PWView.h */,
 				116037191AC68B1C0083E61B /* PWView.m */,
 				1160371A1AC68B1C0083E61B /* PWWallpaper.h */,

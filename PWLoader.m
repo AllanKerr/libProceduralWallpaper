@@ -14,10 +14,12 @@ static NSString *const PWWallpaperDirectory = @"/Library/ProceduralWallpaper";
 
 static Class (*orig_SBFMagicWallpaperClassForIdentifier)(NSString *identifier);
 
+// Allows wallpapers to be loaded from PWWallpaperDirectory making procedural wallpapers disable when in safemode
 static Class hook_SBFMagicWallpaperClassForIdentifier(NSString *identifier)
 {
     Class class = orig_SBFMagicWallpaperClassForIdentifier(identifier);
     if (class == nil) {
+        // Searchs for NSBundles in PWWallpaperDirectory with the identifier class name included in SBProceduralWallpaperClassNames
         NSArray *contents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:PWWallpaperDirectory error:nil];
         for (NSString *file in contents) {
             if ([file.pathExtension isEqualToString:@"bundle"]) {
@@ -52,6 +54,7 @@ static Class hook_SBFMagicWallpaperClassForIdentifier(NSString *identifier)
 {
     NSBundle *bundle = notification.object;
     if ([bundle.bundleIdentifier isEqualToString:@"com.apple.wallpaper.settings"]) {
+        // Wallpaper preference bundle is late loaded requring hooking in bundleDidLoad:
         void *SBFMagicWallpaperClassForIdentifier = MSFindSymbol(NULL, "__SBFMagicWallpaperClassForIdentifier");
         MSHookFunction(SBFMagicWallpaperClassForIdentifier, (void *)hook_SBFMagicWallpaperClassForIdentifier, (void **)&orig_SBFMagicWallpaperClassForIdentifier);
     }
@@ -71,6 +74,7 @@ CHConstructor
         void *SBFMagicWallpaperClassForIdentifier = MSFindSymbol(NULL, "__SBFMagicWallpaperClassForIdentifier");
         MSHookFunction(SBFMagicWallpaperClassForIdentifier, (void *)hook_SBFMagicWallpaperClassForIdentifier, (void **)&orig_SBFMagicWallpaperClassForIdentifier);
     } else {
+        // PWLoader exists to handle NSBundleDidLoadNotification
         [[PWLoader alloc] init];
     }
 }

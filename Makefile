@@ -20,3 +20,6 @@ include $(THEOS_MAKE_PATH)/tweak.mk
 
 internal-library-compile:
 	cp ./obj/libProceduralWallpaper.dylib $(THEOS_LIBRARY_PATH)
+
+after-install::
+	install.exec "killall -9 SpringBoard"

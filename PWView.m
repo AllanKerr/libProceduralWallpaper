@@ -30,6 +30,7 @@ NSString * const PWLoadingDidFinishNotification = @"PWLoadingDidFinishNotificati
     return [NSString stringWithFormat:@"<%@: %p; referenceCount:%i hidden:%i isPaused:%i>", [self class], self, self.referenceCount, self.hidden, self.layer.speed == 0.0f];
 }
 
+// Used for folder color: allows subclasses to disable computing average color for wallpapers with large variances in color
 - (BOOL)supportsAverageColor
 {
     return YES;
@@ -53,11 +54,13 @@ NSString * const PWLoadingDidFinishNotification = @"PWLoadingDidFinishNotificati
     }
     [self performOnMainThread:^{
         NSDictionary *userInfo = @{@"value" : value, @"key" : key};
+        // NSNotificationCenter is used because PWLoadingDidFailNotification is only handled when previewing wallpapers
         NSNotificationCenter *defaultCenter = [NSNotificationCenter defaultCenter];
         [defaultCenter postNotificationName:PWDidUpdateOptionsNotification object:self userInfo:userInfo];
     }];
 }
 
+// Async loading did fail
 - (void)loadingFailedWithTitle:(NSString *)title errorMessage:(NSString *)errorMessage
 {
     [self performOnMainThread:^{
@@ -65,18 +68,21 @@ NSString * const PWLoadingDidFinishNotification = @"PWLoadingDidFinishNotificati
         NSAssert1(errorMessage != nil, @"errorMessage can not be nil:%@", errorMessage);
         
         NSDictionary *userInfo = @{@"title" : title, @"errorMessage" : errorMessage};
+        
+        // NSNotificationCenter is used because PWLoadingDidFailNotification is only handled when previewing wallpapers
         NSNotificationCenter *defaultCenter = [NSNotificationCenter defaultCenter];
         [defaultCenter postNotificationName:PWLoadingDidFailNotification object:self userInfo:userInfo];
     }];
 }
 
+// Async loading did finish
 - (void)loadingFinished
 {
     [self performOnMainThread:^{
+        // NSNotificationCenter is used because PWLoadingDidFailNotification is only handled when previewing wallpapers
         NSNotificationCenter *defaultCenter = [NSNotificationCenter defaultCenter];
         [defaultCenter postNotificationName:PWLoadingDidFinishNotification object:self];
     }];
-    [self.delegate updateBlurForView:self];
 }
 
 - (void)performOnMainThread:(void(^)())block
@@ -105,6 +111,7 @@ NSString * const PWLoadingDidFinishNotification = @"PWLoadingDidFinishNotificati
     return UIImagePNGRepresentation(thumbnail);    
 }
 
+// Called upon orientation change for subclasses
 - (void)viewWillTransitionToSize:(CGSize)size
 {
 
@@ -113,7 +120,6 @@ NSString * const PWLoadingDidFinishNotification = @"PWLoadingDidFinishNotificati
 - (void)resume
 {
     if (self.layer.speed == 0.0f) {
-        NSLog(@"\n\n\n\n RESUME");
         CFTimeInterval pausedTime = [self.layer timeOffset];
         self.layer.speed = 1.0f;
         self.layer.timeOffset = 0.0f;
@@ -126,18 +132,10 @@ NSString * const PWLoadingDidFinishNotification = @"PWLoadingDidFinishNotificati
 - (void)pause
 {
     if (self.layer.speed == 1.0f) {
-        NSLog(@"\n\n\n\n PAUSE");
         CFTimeInterval pausedTime = [self.layer convertTime:CACurrentMediaTime() fromLayer:nil];
         self.layer.speed = 0.0f;
         self.layer.timeOffset = pausedTime;
     }
-}
-
-- (void)dealloc
-{
-    NSLog(@"\n\n\n\n\ndealloc PWView");
-    [_averageColor release];
-    [super dealloc];
 }
 
 @end

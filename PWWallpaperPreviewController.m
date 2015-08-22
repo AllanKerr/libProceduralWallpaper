@@ -50,6 +50,7 @@ static NSString *const PWApplicationSupport = @"libProceduralWallpaper";
 
 - (NSDictionary *)wallpaperForIdentifier:(NSString *)identifier options:(NSDictionary *)options
 {
+    // Adds the identifier to the options. This is done to identify animated wallpapers that use libProceduralWallpaper as opposed to default procedural wallpapers
     NSAssert1(identifier != nil, @"Invalid value for %@", kSBUIMagicWallpaperIdentifierKey);
     [options setValue:identifier forKey:kSBUIMagicWallpaperIdentifierKey];
     return @{kSBUIMagicWallpaperIdentifierKey : identifier, kSBUIMagicWallpaperPresetOptionsKey : options};
@@ -103,6 +104,7 @@ static NSString *const PWApplicationSupport = @"libProceduralWallpaper";
     return self;
 }
 
+// Update the options dictionary when recieving PWDidUpdateOptionsNotification from PWWallpaper
 - (void)didUpdateOptionsNotification:(NSNotification *)notification
 {
     NSDictionary *userInfo = notification.userInfo;
@@ -116,6 +118,7 @@ static NSString *const PWApplicationSupport = @"libProceduralWallpaper";
     }
 }
 
+// Allows the wallpaper to be set once the PWView subclass finished loading
 - (void)loadingDidFinishNotification:(NSNotification *)notification
 {
     self.asyncWallpaperLoading = NO;
@@ -133,6 +136,7 @@ static NSString *const PWApplicationSupport = @"libProceduralWallpaper";
     [self.activityIndicator stopAnimating];
 }
 
+// Displays a UIAlert when PWView subclass fails loading
 - (void)loadingDidFailNotification:(NSNotification *)notification
 {
     self.asyncWallpaperLoading = NO;
@@ -156,6 +160,7 @@ static NSString *const PWApplicationSupport = @"libProceduralWallpaper";
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
 {
+    // keep the activityIndicator centered
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
     self.activityIndicator.center = CGPointMake(size.width / 2, size.height / 2);
 }
@@ -172,6 +177,7 @@ static NSString *const PWApplicationSupport = @"libProceduralWallpaper";
 - (void)initializeToggle
 {
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        // Add the toggle to the bottom bar
         PLCropOverlayWallpaperBottomBar *bottomBar = [self.cropOverlay wallpaperBottomBar];
         PLWallpaperButton *motionToggle = [bottomBar motionToggle];
         if (motionToggle) {
@@ -196,6 +202,7 @@ static NSString *const PWApplicationSupport = @"libProceduralWallpaper";
     PLCropOverlayWallpaperBottomBar *bottomBar = [self.cropOverlay wallpaperBottomBar];
     PLWallpaperButton *motionToggle = [bottomBar motionToggle];
     if (motionToggle) {
+        // Updates the toggle to the next value
         self.toggleIndex++;
         if (self.toggleIndex >= self.toggleValues.count) {
             self.toggleIndex = 0;
@@ -216,6 +223,7 @@ static NSString *const PWApplicationSupport = @"libProceduralWallpaper";
 - (void)initializeLoadingIndicator
 {
     if (self.asyncWallpaperLoading == YES && self.cropOverlay != nil) {
+        // Disable all the buttons allowing the wallpaper to be set
         PLCropOverlayWallpaperBottomBar *bottomBar = [self.cropOverlay wallpaperBottomBar];
         if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
             
@@ -245,6 +253,7 @@ static NSString *const PWApplicationSupport = @"libProceduralWallpaper";
 
 - (void)cropOverlayWasCancelled:(PLCropOverlay *)overlay
 {
+    // Dismiss when cancel is pressed
     if ([self.previewDelegate respondsToSelector:@selector(wallpaperPreviewControllerWillCancel:)]) {
         [self.previewDelegate wallpaperPreviewControllerWillCancel:self];
     }
@@ -254,6 +263,7 @@ static NSString *const PWApplicationSupport = @"libProceduralWallpaper";
 
 - (void)_cropWallpaperFinished:(PLCropOverlay *)overlay
 {
+    // Dismiss and notifiy the delegate the wallpaper was set
     if ([self.previewDelegate respondsToSelector:@selector(wallpaperPreviewController: willFinishWithOptions:)]) {
         [self.previewDelegate wallpaperPreviewController:self willFinishWithOptions:self.options];
     }
@@ -279,17 +289,20 @@ static NSString *const PWApplicationSupport = @"libProceduralWallpaper";
     [super setImageAsHomeScreenClicked:sender];
 }
 
+// Update the thumbnail for the newly set wallpaper
 - (void)setThumbnail:(NSString *)name
 {
     NSString *basePath = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSSystemDomainMask, YES) objectAtIndex:0];
     NSString *applicationSupportPath = [basePath stringByAppendingPathComponent:PWApplicationSupport];
     
+    // Clean up old thumbnails with the same prefix, it is impossible to ever have two ProceduralLock_thumb
     NSFileManager *fileManager = [NSFileManager defaultManager];
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"SELF contains[c] %@", name];
     NSArray *files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:applicationSupportPath error:nil];
     for (NSString *path in [files filteredArrayUsingPredicate:predicate]) {
         [fileManager removeItemAtPath:path error:nil];
     }
+    // The thumbnail is only updated if the filename changes. Adding the time interval allows a unique filename everytime the wallpaper is set forcing it to update.
     // Multiplied by 10 to prevent identical file names if the same wallpaper is set twice in one second
     NSString *filename = [NSString stringWithFormat:@"%@-%.f.png", name, 10.0f * [NSDate date].timeIntervalSince1970];
     NSString *path = [applicationSupportPath stringByAppendingPathComponent:filename];

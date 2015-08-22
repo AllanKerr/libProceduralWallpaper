@@ -6,4 +6,4 @@ theos/
 _/
 obj/
 *.deb
-xcuserdata/
+xcuserdata

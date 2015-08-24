@@ -1,6 +1,6 @@
 # libProceduralWallpaper
 
-This library is designed to allow developers to easilly create and load animated wallpapers. It provides a public interface for the private frameworks reponsible for loading animated wallpapers.
+This library is designed to allow developers to easily create and load animated wallpapers. It provides a public interface for the private frameworks reponsible for loading animated wallpapers. iOS 8.0 and up are supported.
 
 ## Linking:
 

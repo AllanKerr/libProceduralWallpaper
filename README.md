@@ -31,7 +31,7 @@ ProjectName_LIBRARIES = ProceduralWallpaper
 ```
 
 It is also important to include an **info.plist** file in the bundle's **/Resources** directory. This must include the following information:
-```
+```Objective-C
 {
 	CFBundleExecutable = MyWallpaperName;
 	CFBundleIdentifier = "com.my.wallpaperName";
@@ -44,7 +44,7 @@ It is also important to include an **info.plist** file in the bundle's **/Resour
 If you want thumbnail support for animated wallpapers a symbolic link must be made from **/Library/ProceduralWallpaper/MyWallpaperName.bundle/libProceduralWallpaper** to **/Library/Application Support/libProceduralWallpaper**.
 
 The wallpaper bundle must include two important classes, a PWWallpaper subclass and a PWView subclass.
-```
+```Objective-C
 #import "libProceduralWallpaper.h"
 #import "MyPWViewSubclass.h"
 
@@ -64,7 +64,7 @@ The wallpaper bundle must include two important classes, a PWWallpaper subclass 
 @end
 ```
 The PWView subclass is the view that displays the animated wallpaper.
-```
+```Objective-C
 #import "libProceduralWallpaper.h"
 
 @interface MyPWViewSubclass : PWView
@@ -98,7 +98,7 @@ The PWView subclass is the view that displays the animated wallpaper.
 ## Preference Bundle:
 
 The last part of libProceduralWallpaper is previewing and setting wallpapers. The first step is to add a preference bundle as an aggregate project. Previewing and settings wallpapers is handled using PWWallpaperPreviewController:
-```
+```Objective-C
 #import "libProceduralWallpaper.h"
 
 ...
@@ -116,7 +116,7 @@ PWWallpaperPreviewController *previewController = [PWWallpaperPreviewController 
 ## Extended functionality:
 
 The above examples can be used to create a basic animated wallpaper. For information on creating more advanced animated wallpapers documentation is included in:
-```
+```Objective-C
 PWView.h
 PWWallpaper.h
 PWWallpaperPreviewController.h
